@@ -11,8 +11,8 @@ public class FileCommunication extends BoardCommunication {
 
 	BufferedReader reader;
 
-	public FileCommunication(EventStorage events, String fileName) {
-		super(events);
+	public FileCommunication(CommunicationListener listener, String fileName) {
+		super(listener);
 
 		try {
 			reader = new BufferedReader(new FileReader(fileName));
@@ -43,14 +43,15 @@ public class FileCommunication extends BoardCommunication {
 		if (line == null)
 			return null;
 
+		delay(1000);
 		int id = Integer.parseInt(line, 16);
-		EventType eventType = EventType.fromInt(id);
+		Event.Type eventType = Event.Type.fromInt(id);
 		switch (eventType) {
 		case BoardChange:
 			String data = readLine();
-			return new Event(EventType.BoardChange, new BoardData(data));
+			return new Event(Event.Type.BoardChange, new BoardData(data));
 		case Move:
-			return new Event(EventType.Move);
+			return new Event(Event.Type.Move);
 		default:
 			return null;
 		}

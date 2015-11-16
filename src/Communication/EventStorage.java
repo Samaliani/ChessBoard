@@ -23,7 +23,7 @@ public class EventStorage {
 		return events.get(index);
 	}
 
-	public Event findEvent(EventType eventType) {
+	public Event findEvent(Event.Type eventType) {
 		for (Event event : events)
 			if (event.type == eventType)
 				return event;

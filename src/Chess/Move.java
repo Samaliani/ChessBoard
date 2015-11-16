@@ -2,45 +2,81 @@ package Chess;
 
 public class Move {
 
-	MoveType type;
-	PieceType pieceType;
-	Position position;
-
-	public Move(MoveType type)
-	{
-		assert (type == MoveType.CastlingK) || (type == MoveType.CastlingQ); 
-		this.type = type;
+	public enum Type {
+		Regular, Take, CastlingK, CastlingQ, Unknown, Invalid
 	}
 	
-	public Move(MoveType type, PieceType pieceType, Position position)
-	{
-		assert (type == MoveType.Regular) || (type == MoveType.Take); 
+	Type type;
+	Piece.Type pieceType;
+	Position position;
+	Position ambiguity;
+	boolean check;
+	boolean checkmate;
+
+	public Move(Type type) {
+		assert(type == Type.CastlingK) || (type == Type.CastlingQ);
+		this.type = type;
+	}
+
+	public Move(Type type, Piece.Type pieceType, Position position) {
+		assert(type == Type.Regular) || (type == Type.Take);
 		this.type = type;
 		this.pieceType = pieceType;
 		this.position = position;
 	}
-	
-	public String toString()
-	{
+
+	public Move(Type type, Piece.Type pieceType, Position position, Position ambiguity, boolean check) {
+		assert(type == Type.Regular) || (type == Type.Take);
+		this.type = type;
+		this.pieceType = pieceType;
+		this.position = position;
+		this.ambiguity = ambiguity;
+		this.check = check;
+	}
+
+	public String toString() {
 		String result = "";
-		
-		switch(type)
-		{
+
+		switch (type) {
 		case Take:
-			result = "x";
-		case Regular:
-			result += PieceType.toChar(pieceType, false);
+			result += Piece.Type.toChar(pieceType, false);
+			result += getAmbiguity();
+			result += "x";
 			result += position.toString();
-			break;
+			result += getMovePostfix();
+			return result;
+		case Regular:
+			result += Piece.Type.toChar(pieceType, false);
+			result += getAmbiguity();
+			result += position.toString();
+			result += getMovePostfix();
+			return result;
 		case CastlingK:
-			result = "O-O";
-			break;
+			return "O-O";
 		case CastlingQ:
-			result = "O-O-O";
-			break;
+			return "O-O-O";
+		default:
+			return "...";
 		}
-		
+	}
+
+	private String getAmbiguity() {
+		if (ambiguity == null)
+			return "";
+
+		String result = "";
+		if (ambiguity.getCol() == position.getCol())
+			result += Character.forDigit(ambiguity.getRow() + 1, 10);
+		result = Character.toString((char) ((int) 'a' + ambiguity.getCol())) + result;
 		return result;
 	}
-	
+
+	private String getMovePostfix() {
+		if (checkmate)
+			return "#";
+		if (check)
+			return "+";
+		return "";
+	}
+
 }

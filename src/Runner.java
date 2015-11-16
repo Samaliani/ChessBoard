@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import Chess.Board;
+import Chess.PGN.PGN;
 import Communication.Event;
 import Communication.EventStorage;
 import Communication.FileCommunication;
-import GUI.MainWindow;
-import LowLevel.Analyzer;
-import PGN.PGN;
+import LowLevel.StateMachine;
 
 public class Runner {
 
@@ -25,21 +24,23 @@ public class Runner {
 		board.reset();
 		
 
-		EventStorage events = new EventStorage();
-		FileCommunication comm = new FileCommunication(events, ".\\Data\\openning.txt");
+		//EventStorage events = new EventStorage();
+		//FileCommunication comm = new FileCommunication(events, ".\\Data\\openning5.txt");
 
-		comm.run();
+		//comm.run();
 		//while(comm.isAlive())
 		//	Thread.sleep(100);
 
-		Analyzer an = new Analyzer(board, events);
-		an.start();
+//		StateMachine sm = new StateMachine(board);
+//		sm.start();
+		//Analyzer an = new Analyzer(board, events);
+		//an.start();
 		
-		while (events.getEventCount() > 0)
-			an.processEvents();
+		//while (events.getEventCount() > 0)
+		//	an.processEvents();
 
-		PGN pgn = new PGN(board);
-		System.out.println(pgn.exportMoves());
+	//	PGN pgn = new PGN(board);
+	//	System.out.println(pgn.exportMoves());
 		
 
 

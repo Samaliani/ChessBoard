@@ -4,10 +4,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import Chess.Board;
+import Chess.Piece;
+import Chess.Piece.Color;
 import Chess.Position;
 
 public class Utils {
@@ -28,36 +28,36 @@ public class Utils {
 		return new BoardData(data);
 	}
 
-	public static List<Position> getAppeared(Board board, BoardData startData, BoardData finishData) {
+	public static BoardData getBoardData(Board board, Color color) {
 
-		List<Position> result = new ArrayList<Position>();
+		byte[] data = new byte[8];
 		for (int row = 0; row < 8; row++) {
-			int c = (~startData.data[row]) & finishData.data[row];
-			if (c != 0) {
-				for (int col = 0; col < 8; col++) {
-					if (c == 128 >>> col)
-						result.add(new Position(col, row));
-				}
+			byte line = 0;
+			for (int col = 0; col < 8; col++) {
+				line <<= 1;
+				Piece piece = board.getPiece(new Position(col, row));
+				if ((piece != null) && (piece.getColor() == color))
+					line |= 1;
 			}
-
+			data[row] = line;
 		}
-		return result;
+
+		return new BoardData(data);
 	}
-	
-	public static List<Position> getDissapeared(Board board, BoardData startData, BoardData finishData) {
 
-		List<Position> result = new ArrayList<Position>();
-		for (int row = 0; row < 8; row++) {
-			int c = startData.data[row] & (~finishData.data[row]);
-			if (c != 0) {
-				for (int col = 0; col < 8; col++) {
-					if (c == 128 >>> col)
-						result.add(new Position(col, row));
-				}
+	public static int getPiecePosition(BoardData data) {
+		for (int i = 0; i < 8; i++) {
+			int pos = 8 * i + 7;
+
+			byte b = data.data[i];
+			while (b != 0) {
+				if (((int) b & 1) == 1)
+					return pos;
+				b >>= 1;
+				pos--;
 			}
-
 		}
-		return result;
+		return -1;
 	}
 
 	public static BoardData loadFromFile(String fileName) throws IOException {

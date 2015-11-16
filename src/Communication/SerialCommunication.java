@@ -2,8 +2,10 @@ package Communication;
 
 public class SerialCommunication extends BoardCommunication {
 
-	public SerialCommunication(EventStorage eventStorage) {
-		super(eventStorage);
+	String portName;
+
+	public SerialCommunication(CommunicationListener listener) {
+		super(listener);
 
 	}
 
@@ -19,6 +21,10 @@ public class SerialCommunication extends BoardCommunication {
 	protected void readBoardData() {
 		// TODO read
 
+	}
+
+	public void setPortName(String portName) {
+		this.portName = portName;
 	}
 
 }

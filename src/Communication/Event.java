@@ -6,20 +6,35 @@ import LowLevel.BoardData;
 
 public class Event {
 
-	EventType type;
+	public enum Type {
+		NoEvent, BoardChange, Move;
+
+		public static Type fromInt(int value) {
+			switch (value) {
+			case 0xFF:
+				return BoardChange;
+			case 0xFE:
+				return Move;
+			default:
+				return NoEvent;
+			}
+		}
+	}
+
+	Type type;
 	BoardData data;
 	Date time = new Date();
 
-	public Event(EventType type) {
+	public Event(Type type) {
 		this.type = type;
 	}
 
-	public Event(EventType type, BoardData data) {
+	public Event(Type type, BoardData data) {
 		this.type = type;
 		this.data = data;
 	}
 
-	public EventType getType() {
+	public Type getType() {
 		return type;
 	}
 
@@ -30,5 +45,4 @@ public class Event {
 	public BoardData getData() {
 		return data;
 	}
-
 }

@@ -1,16 +1,18 @@
 package Communication;
 
-public abstract class BoardCommunication extends Thread {
+public abstract class BoardCommunication implements Runnable {
 
-	EventStorage eventStorage;
+	CommunicationListener listener;
+	boolean isStop;
 
-	public BoardCommunication(EventStorage events) {
-		eventStorage = events;
+	public BoardCommunication(CommunicationListener listener) {
+		this.listener = listener;
+		isStop = false;
 	}
 
-	private void delay(int millis) {
+	protected void delay(int millis) {
 		try {
-			sleep(millis);
+			Thread.sleep(millis);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -19,13 +21,17 @@ public abstract class BoardCommunication extends Thread {
 	abstract protected Event getEvent();
 
 	public void run() {
-		while (true) {
+		while (!isStop) {
 			Event event = getEvent();
-			if (event == null)
-				break;
-
-			eventStorage.addEvent(event);
-			delay(50);
+			if (event != null)
+				listener.processEvent(event);
+			else
+				delay(50);
 		}
+	}
+	
+	public void stop()
+	{
+		isStop = true;
 	}
 }
