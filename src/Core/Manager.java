@@ -1,7 +1,6 @@
-package GUI;
+package Core;
 
 import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,7 +32,10 @@ import Communication.CommunicationListener;
 import Communication.FileCommunication;
 import Communication.SerialCommunication;
 import Communication.SerialHelper;
+import GUI.ChessBoardMain;
+import LowLevel.BoardData;
 import LowLevel.StateMachine;
+import LowLevel.StateMachineEventListener;
 
 public class Manager {
 
@@ -43,39 +45,48 @@ public class Manager {
 	Board board;
 	BoardCommunication communication;
 	StateMachine sm;
-
-	String portName;
+	DebugOutputListener output;
 
 	boolean closeApp;
 
+	boolean dataDebug;
+	String debugPath;
+	boolean visualDebug;
+
 	public Manager() {
+		createComponents();
+	}
+
+	public void createComponents() {
 
 		// Create board
 		board = new Board();
 		board.reset();
 
+		// Communication
+		communication = new SerialCommunication();
+
+		// Debug
+		String fileName = ".\\data\\openning5.txt";//.\\debug\\2015-11-30 02-25-18.";
+		communication = new FileCommunication(fileName);
+		
+
+		sm = new StateMachine(board);
+	}
+
+	private void initialize() {
 		// Init settings
 		preferences = new Properties(getDefaultPreferences());
 		loadPreferences();
 
-		// Init engine
-		sm = new StateMachine(board);
+		if (dataDebug) {
+			output = new DebugOutputListener(debugPath);
+			output.reset();
+		}
 
-		communication = new SerialCommunication(new CommunicationListener() {
-			public void processEvent(Communication.Event event) {
-				sm.processEvent(event);
-			}
-		});
-		((SerialCommunication) communication).setPortName(portName);
+		initEvents();
 
-		// Debug
-		String fileName = ".\\Data\\openning5.txt";
-		communication = new FileCommunication(new CommunicationListener() {
-			public void processEvent(Communication.Event event) {
-				sm.processEvent(event);
-			}
-		}, fileName);
-
+		initFrameEvents();
 	}
 
 	public void setFrame(ChessBoardMain frame) {
@@ -83,11 +94,11 @@ public class Manager {
 
 		frame.boardPanel.setBoard(board);
 
+		/*
 		// apply preferences to UI
-		frame.port_combo.addItem(portName);
-		frame.port_combo.setSelectedItem(portName);
-
-		initEvents();
+		frame.port_combo.addItem(communication.getPortName());
+		frame.port_combo.setSelectedItem(communication.getPortName());
+		*/
 	}
 
 	private Properties getDefaultPreferences() {
@@ -106,13 +117,18 @@ public class Manager {
 			e.printStackTrace();
 		}
 
-		portName = preferences.getProperty("Communication.Port");
+		String portName = preferences.getProperty("Communication.Port");
+		communication.setPortName(portName);
+
+		dataDebug = Boolean.parseBoolean(preferences.getProperty("Debug.Output", "false"));
+		debugPath = preferences.getProperty("Debug.Path", System.getProperty("user.dir") + "/debug");
+		visualDebug = Boolean.parseBoolean(preferences.getProperty("Debug.Positions", "false"));
 	}
 
 	private void savePreferences() {
 
-		preferences.setProperty("Communication.Port", portName);
-		
+		preferences.setProperty("Communication.Port", communication.getPortName());
+
 		try {
 			FileWriter writer = new FileWriter("settings.");
 			preferences.store(writer, "Electronic Chess Board settings");
@@ -124,6 +140,9 @@ public class Manager {
 	Thread eventThread;
 
 	public void run() {
+
+		initialize();
+
 		// Стартануть коммуникацию
 		eventThread = new Thread(communication);
 		eventThread.setDaemon(true);
@@ -133,7 +152,6 @@ public class Manager {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -147,9 +165,31 @@ public class Manager {
 
 	public void initEvents() {
 
-		frame.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				stop();
+		sm.addEventListener(new StateMachineEventListener() {
+			protected void gameReset() {
+				board.reset();
+				if (dataDebug)
+					output.reset();
+			}
+		});
+
+		// Communication
+		if (dataDebug)
+			communication.addListener(output);
+
+		if (visualDebug)
+			communication.addListener(new CommunicationListener() {
+				public void processEvent(Communication.Event event) {
+					if ((frame != null) && (event.getData() != null)) {
+						frame.boardPanel.setData(event.getData());
+						frame.boardPanel.repaint();
+					}
+				}
+			});
+
+		communication.addListener(new CommunicationListener() {
+			public void processEvent(Communication.Event event) {
+				sm.processEvent(event);
 			}
 		});
 
@@ -161,6 +201,16 @@ public class Manager {
 
 			public void boardChanged() {
 				doBoardUpdate();
+			}
+		});
+
+	}
+
+	public void initFrameEvents() {
+
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				stop();
 			}
 		});
 
@@ -203,7 +253,7 @@ public class Manager {
 	}
 
 	public void changePort(String portName) {
-	//	((SerialCommunication) communication).setPortName(portName);
+		communication.setPortName(portName);
 	}
 
 	public void copyToClipboard() {
@@ -213,6 +263,9 @@ public class Manager {
 	}
 
 	public void doBoardUpdate() {
+		if (frame == null)
+			return;
+
 		frame.boardPanel.repaint();
 
 		PGN pgn = new PGN(board);
@@ -220,6 +273,9 @@ public class Manager {
 	}
 
 	public void doBoardMove() {
+		if (frame == null)
+			return;
+
 		frame.boardPanel.repaint();
 
 		PGN pgn = new PGN(board);

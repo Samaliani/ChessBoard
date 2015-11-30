@@ -11,8 +11,8 @@ public class FileCommunication extends BoardCommunication {
 
 	BufferedReader reader;
 
-	public FileCommunication(CommunicationListener listener, String fileName) {
-		super(listener);
+	public FileCommunication(String fileName) {
+		super();
 
 		try {
 			reader = new BufferedReader(new FileReader(fileName));

@@ -1,4 +1,4 @@
-package Logic;
+package Chess.Logic;
 
 import Chess.Board;
 import Chess.Piece;

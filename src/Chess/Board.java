@@ -7,9 +7,9 @@ import Chess.BoardEventListener;
 import Chess.Piece.Color;
 import Chess.FEN.FEN;
 import Chess.FEN.FENException;
-import Logic.CastlingLogic;
-import Logic.MainLogic;
-import Logic.PieceLogic;
+import Chess.Logic.CastlingLogic;
+import Chess.Logic.MainLogic;
+import Chess.Logic.PieceLogic;
 
 public class Board {
 
@@ -31,6 +31,9 @@ public class Board {
 	public boolean makeMove(Position start, Position finish) {
 
 		Piece piece = getPiece(start);
+		if (piece.getColor() != turnColor)
+			return false;
+		
 		Move.Type type;
 		Position position = finish;
 
@@ -51,20 +54,8 @@ public class Board {
 		processMove(type, piece, position);
 		piece.move(position);
 
-		boolean isCheck = MainLogic.isCheck(this, Color.not(turnColor));
-		boolean isCheckmate = false;
-		if (isCheck)
-			isCheckmate = MainLogic.isCheckmate(this, Color.not(turnColor));
-
-		Move move = new Move(type, piece.getType(), position, ambiguity, isCheck);
-		move.checkmate = isCheckmate;
-		moves.add(move);
-
-		if (turnColor == Color.Black)
-			currentMove++;
-		turnColor = Color.not(turnColor);
-
-		raiseBoardMoveEvent();
+		Move move = new Move(type, piece.getType(), position, ambiguity);
+		addMove(move);
 		return true;
 	}
 
@@ -81,9 +72,6 @@ public class Board {
 
 		processMove(type, king, position);
 
-		Move move = new Move(type);
-		moves.add(move);
-
 		king.move(position);
 		Piece rook;
 		switch (type) {
@@ -99,9 +87,23 @@ public class Board {
 			return false;
 		}
 
-		raiseBoardMoveEvent();
+		Move move = new Move(type);
+		addMove(move);
 		return true;
 	}
+	
+	private void addMove(Move move){
+		move.check = MainLogic.isCheck(this, Color.not(turnColor));
+		if (move.check)
+			move.checkmate = MainLogic.isCheckmate(this, Color.not(turnColor));
+		moves.add(move);
+
+		if (turnColor == Color.Black)
+			currentMove++;
+		turnColor = Color.not(turnColor);
+		raiseBoardMoveEvent();
+	}
+	
 
 	private Move.Type getCastlingType(Piece piece, Position position) {
 

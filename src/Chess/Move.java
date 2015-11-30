@@ -17,7 +17,7 @@ public class Move {
 		assert(type == Type.CastlingK) || (type == Type.CastlingQ);
 		this.type = type;
 	}
-
+	
 	public Move(Type type, Piece.Type pieceType, Position position) {
 		assert(type == Type.Regular) || (type == Type.Take);
 		this.type = type;
@@ -25,13 +25,12 @@ public class Move {
 		this.position = position;
 	}
 
-	public Move(Type type, Piece.Type pieceType, Position position, Position ambiguity, boolean check) {
+	public Move(Type type, Piece.Type pieceType, Position position, Position ambiguity) {
 		assert(type == Type.Regular) || (type == Type.Take);
 		this.type = type;
 		this.pieceType = pieceType;
 		this.position = position;
 		this.ambiguity = ambiguity;
-		this.check = check;
 	}
 
 	public String toString() {
@@ -52,9 +51,13 @@ public class Move {
 			result += getMovePostfix();
 			return result;
 		case CastlingK:
-			return "O-O";
+			result = "O-O";
+			result += getMovePostfix();
+			return result;
 		case CastlingQ:
-			return "O-O-O";
+			result = "O-O-O";
+			result += getMovePostfix();
+			return result;
 		default:
 			return "...";
 		}

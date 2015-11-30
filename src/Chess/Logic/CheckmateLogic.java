@@ -1,4 +1,4 @@
-package Logic;
+package Chess.Logic;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public class CheckmateLogic extends CheckLogic {
 	}
 
 	private boolean canTake(Color color, Position target) {
-		List<Piece> pieces = board.getPieces(Color.not(color));
+		List<Piece> pieces = board.getPieces(color);
 		for (Piece piece : pieces) {
 			PieceLogic logic = MainLogic.getPieceLogic(board, piece);
 			if (logic.validateTake(target))
@@ -52,7 +52,7 @@ public class CheckmateLogic extends CheckLogic {
 	}
 
 	private boolean canMove(Color color, Position target) {
-		List<Piece> pieces = board.getPieces(Color.not(color));
+		List<Piece> pieces = board.getPieces(color);
 		for (Piece piece : pieces) {
 			PieceLogic logic = MainLogic.getPieceLogic(board, piece);
 			if (logic.validateMove(target))

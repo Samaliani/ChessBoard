@@ -7,16 +7,31 @@ import LowLevel.BoardData;
 public class Event {
 
 	public enum Type {
-		NoEvent, BoardChange, Move;
+		NoEvent, BoardChange, Move;//ButtonWhite, ButtonBlack;
 
 		public static Type fromInt(int value) {
 			switch (value) {
 			case 0xFF:
 				return BoardChange;
 			case 0xFE:
-				return Move;
+				return Move;//ButtonWhite;
+			case 0xFD:
+				return Move;//ButtonBlack;
 			default:
 				return NoEvent;
+			}
+		}
+
+		public static int toInt(Type value) {
+			switch (value) {
+			case BoardChange:
+				return 0xFF;
+			case Move: //ButtonWhite:
+				return 0xFE;
+			//case ButtonBlack:
+			//	return 0xFD;
+			default:
+				return 0;
 			}
 		}
 	}
@@ -45,4 +60,5 @@ public class Event {
 	public BoardData getData() {
 		return data;
 	}
+	
 }

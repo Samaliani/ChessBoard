@@ -1,5 +1,8 @@
 package LowLevel;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import Chess.Board;
 import Chess.Piece.Color;
 import Chess.Position;
@@ -34,6 +37,26 @@ public class StateMachine {
 		resetTurn();
 	}
 
+	// --------------------------------------
+	// Events
+	// --------------------------------------
+
+	List<StateMachineEventListener> listeners = new ArrayList<StateMachineEventListener>();
+
+	public void addEventListener(StateMachineEventListener listener) {
+		listeners.add(listener);
+	}
+
+	public void raiseBoardChangeEvent(BoardData data) {
+		for (StateMachineEventListener listener : listeners)
+			listener.boardChanged(data);
+	}	
+
+	public void raiseGameResetEvent() {
+		for (StateMachineEventListener listener : listeners)
+			listener.gameReset();
+	}	
+	
 	public void processEvent(Event event) {
 
 		switch (currentState) {
@@ -106,7 +129,10 @@ public class StateMachine {
 	}
 
 	private State processMove() {
-
+		
+		if (lastData.equals(turnData))
+			return State.Wait;
+		
 		int delta = turnData.pieceCount - lastData.pieceCount;
 		BoardData appeared = getAppeared(turnData, lastData);
 		BoardData disappeared = getDisappeared(turnData, lastData);
@@ -119,7 +145,7 @@ public class StateMachine {
 				int disRank = getKingRank(disappeared);
 				setKingRank(disappeared, (byte)(disRank & 0x08));
 				int appRank = getKingRank(appeared);
-				setKingRank(appeared, (byte)(appRank & 0x16));
+				setKingRank(appeared, (byte)(appRank & 0x22));
 				success = makeCastling(Utils.getPiecePosition(disappeared), Utils.getPiecePosition(appeared));
 			} else
 				// Regular
@@ -151,14 +177,16 @@ public class StateMachine {
 
 		// Wait for previous move or initial state
 		if (event.getType() == Event.Type.BoardChange) {
+
 			BoardData data = event.getData();
 
 			currentState = processBoardChange(data);
 
 			if (data.equals(BoardData.initialData)) {
-				// TODO
+				raiseGameResetEvent();
 				//currentState = State.Start;
-				return;
+				currentState = State.Wait;
+				resetTurn();
 			}
 		}
 	}

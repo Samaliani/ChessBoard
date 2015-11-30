@@ -1,22 +1,24 @@
-package GUI;
+package Core;
 
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import GUI.ChessBoardMain;
+
 public class Program {
 
 	public static void main(String args[]) {
 
+		rxtxNativeHelper.initialize();
+		initUIManager();
+		
 		Manager manager = new Manager();
+		ChessBoardMain frame = new ChessBoardMain();
+		manager.setFrame(frame);
 
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
-
-				initUIManager();
-
-				ChessBoardMain frame = new ChessBoardMain();
-				manager.setFrame(frame);
 
 				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				frame.setVisible(true);
@@ -34,9 +36,8 @@ public class Program {
 			        UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
 				| UnsupportedLookAndFeelException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
-	}	
+	}
 
 }

@@ -19,10 +19,10 @@ import javax.swing.ListSelectionModel;
 
 public class ChessBoardMain extends javax.swing.JFrame {
 	public static final long serialVersionUID = 0;
-	ChessBoardPanel boardPanel;
-	final JTextPane notation_text = new JTextPane();
-	final JComboBox<String> port_combo;
-	final JButton copy_button;
+	public ChessBoardPanel boardPanel;
+	public final JTextPane notation_text = new JTextPane();
+	public final JComboBox<String> port_combo;
+	public final JButton copy_button;
 	private JTable table;
 	
 	/** Creates new form SVGIconDemo */

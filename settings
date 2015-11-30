@@ -1,3 +1,5 @@
 #Electronic Chess Board settings
-#Fri Nov 13 12:17:05 MSK 2015
+#Mon Nov 30 15:30:19 MSK 2015
+Debug.Output=true
 Communication.Port=
+Debug.Positions=true

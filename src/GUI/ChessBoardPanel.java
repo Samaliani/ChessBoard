@@ -13,11 +13,13 @@ import Chess.Board;
 import Chess.Piece;
 import Chess.Piece.Type;
 import Chess.Position;
+import LowLevel.BoardData;
 
-class ChessBoardPanel extends JPanel {
+public class ChessBoardPanel extends JPanel {
 	public static final long serialVersionUID = 0;
 
 	private Board board;
+	private BoardData data;
 	private SVGIcon helper;
 	private Map<String, URI> sprites;
 
@@ -45,9 +47,10 @@ class ChessBoardPanel extends JPanel {
 	private void loadSprites(Piece.Color color) {
 		for (Type t : Type.values()) {
 			String key = getPieceStr(t, color);
-			
-			String name = "sprites/" + key + ".svg";
-			InputStream stream = ChessBoardPanel.class.getResourceAsStream(name);
+
+			String name = "/Resources/sprites/" + key + ".svg";
+			InputStream stream = ChessBoardPanel.class
+					.getResourceAsStream(name);
 			URI uri;
 			try {
 				uri = SVGCache.getSVGUniverse().loadSVG(stream, key);
@@ -55,6 +58,38 @@ class ChessBoardPanel extends JPanel {
 			} catch (IOException e) {
 			}
 		}
+	}
+
+	private boolean isMarkError(int x, int y) {
+		if (data == null)
+			return false;
+
+		boolean piece = (board.getPiece(new Position(x, 7 - y)) != null);
+		boolean place = (((data.getData()[7 - y]) & (1 << (7 - x))) != 0);
+		return place != piece;
+	}
+	
+	
+	private Color getMarkColor(Color color)
+	{
+		float[] rgb = new float[3];
+		rgb = color.getRGBColorComponents(rgb);
+	
+		float sum = 0;
+		for(float value : rgb)
+			sum += value;
+		
+		float ampC = (float)2.0;
+		float red = rgb[0] * ampC;
+		rgb[0] = red;
+		if (red > 1)
+			for(int i = 0; i < rgb.length; i++)
+				rgb[i] /= red;
+
+		float sum2 = rgb[1] + rgb[2];
+		rgb[1] *= (sum - rgb[0]) / sum2;
+		rgb[2] *= (sum - rgb[0]) / sum2;
+		return new Color(rgb[0], rgb[1], rgb[2]);		
 	}
 
 	private void drawBoard(Graphics g, int x, int y, int cellSize) {
@@ -66,11 +101,16 @@ class ChessBoardPanel extends JPanel {
 		for (int i = 0; i < 8; i++)
 			for (int j = 0; j < 8; j++) {
 				if ((i + j) % 2 == 0)
-					currentColor = black;
-				else
 					currentColor = white;
+				else
+					currentColor = black;
+
+				if (isMarkError(j, i))
+					currentColor = getMarkColor(currentColor);
+
 				g.setColor(currentColor);
-				g.fillRect(x + j * cellSize, y + i * cellSize, cellSize, cellSize);
+				g.fillRect(x + j * cellSize, y + i * cellSize, cellSize,
+						cellSize);
 			}
 	}
 
@@ -88,13 +128,19 @@ class ChessBoardPanel extends JPanel {
 				Piece piece = board.getPiece(new Position(j, 7 - i));
 				if (piece != null) {
 					helper.setSvgURI(sprites.get(getPieceStr(piece)));
-					helper.paintIcon(this, g, x + delta + j * cellSize, y + (i + 1) * cellSize - pieceSize);
+					helper.paintIcon(this, g, x + delta + j * cellSize, y
+							+ (i + 1) * cellSize - pieceSize);
 				}
 			}
 	}
 
 	public void setBoard(Board board) {
 		this.board = board;
+		revalidate();
+	}
+
+	public void setData(BoardData data) {
+		this.data = data;
 		revalidate();
 	}
 

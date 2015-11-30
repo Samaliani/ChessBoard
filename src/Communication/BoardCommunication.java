@@ -1,13 +1,25 @@
 package Communication;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class BoardCommunication implements Runnable {
 
-	CommunicationListener listener;
+	List<CommunicationListener> listeners;
 	boolean isStop;
 
-	public BoardCommunication(CommunicationListener listener) {
-		this.listener = listener;
+	public BoardCommunication() {
 		isStop = false;
+		listeners = new ArrayList<CommunicationListener>();
+	}
+
+	public void addListener(CommunicationListener listener) {
+		listeners.add(listener);
+	}
+
+	private void doProcessEvent(Event event) {
+		for (CommunicationListener listener : listeners)
+			listener.processEvent(event);
 	}
 
 	protected void delay(int millis) {
@@ -24,14 +36,21 @@ public abstract class BoardCommunication implements Runnable {
 		while (!isStop) {
 			Event event = getEvent();
 			if (event != null)
-				listener.processEvent(event);
+				doProcessEvent(event);
 			else
 				delay(50);
 		}
 	}
-	
-	public void stop()
-	{
+
+	public void stop() {
 		isStop = true;
 	}
+
+	public String getPortName() {
+		return "";
+	}
+
+	public void setPortName(String portName) {
+	}
+
 }
