@@ -17,6 +17,10 @@ public abstract class BoardCommunication implements Runnable {
 		listeners.add(listener);
 	}
 
+	public void removeAllListeners() {
+		listeners.clear();
+	}
+
 	private void doProcessEvent(Event event) {
 		for (CommunicationListener listener : listeners)
 			listener.processEvent(event);
@@ -48,9 +52,6 @@ public abstract class BoardCommunication implements Runnable {
 
 	public String getPortName() {
 		return "";
-	}
-
-	public void setPortName(String portName) {
 	}
 
 }

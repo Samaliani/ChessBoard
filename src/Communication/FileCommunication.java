@@ -43,19 +43,24 @@ public class FileCommunication extends BoardCommunication {
 		if (line == null)
 			return null;
 
-		delay(1000);
+		delay(100);
 		int id = Integer.parseInt(line, 16);
 		Event.Type eventType = Event.Type.fromInt(id);
 		switch (eventType) {
 		case BoardChange:
 			String data = readLine();
-			return new Event(Event.Type.BoardChange, new BoardData(data));
-		case Move:
-			return new Event(Event.Type.Move);
+			return new Event(eventType, new BoardData(data));
+		case ButtonWhite:
+		case ButtonBlack:
+			return new Event(eventType);
 		default:
 			return null;
 		}
 
+	}
+	
+	public String getPortName() {
+		return "FILE";
 	}
 
 }

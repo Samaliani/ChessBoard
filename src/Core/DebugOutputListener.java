@@ -17,6 +17,7 @@ public class DebugOutputListener extends CommunicationListener {
 
 	public DebugOutputListener(String path) {
 		this.path = path;
+		reset();
 	}
 
 	public void processEvent(Event event) {

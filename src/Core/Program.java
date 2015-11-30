@@ -4,7 +4,7 @@ import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import GUI.ChessBoardMain;
+import Communication.rxtxNativeHelper;
 
 public class Program {
 
@@ -14,14 +14,12 @@ public class Program {
 		initUIManager();
 		
 		Manager manager = new Manager();
-		ChessBoardMain frame = new ChessBoardMain();
-		manager.setFrame(frame);
 
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
 
-				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-				frame.setVisible(true);
+				manager.getFrame().setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				manager.getFrame().setVisible(true);
 				
 			}
 		});

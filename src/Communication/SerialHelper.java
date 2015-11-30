@@ -9,6 +9,16 @@ import gnu.io.SerialPort;
 
 public class SerialHelper {
 
+	List<String> ports;
+
+	public SerialHelper() {
+		ports = getPortsAvailable();
+	}
+
+	public List<String> getPorts() {
+		return ports;
+	}
+
 	@SuppressWarnings("unchecked")
 	static public List<String> getPortsAvailable() {
 		List<String> result = new ArrayList<String>();

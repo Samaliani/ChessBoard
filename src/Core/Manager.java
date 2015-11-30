@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -29,6 +30,7 @@ import Chess.BoardEventListener;
 import Chess.PGN.PGN;
 import Communication.BoardCommunication;
 import Communication.CommunicationListener;
+import Communication.EmptyCommunication;
 import Communication.FileCommunication;
 import Communication.SerialCommunication;
 import Communication.SerialHelper;
@@ -43,12 +45,17 @@ public class Manager {
 	Properties preferences;
 
 	Board board;
-	BoardCommunication communication;
+	SerialHelper serial;
 	StateMachine sm;
+
+	BoardCommunication communication;
 	DebugOutputListener output;
 
+	// Flags
+	boolean fileInput;
 	boolean closeApp;
 
+	// Debug parameters
 	boolean dataDebug;
 	String debugPath;
 	boolean visualDebug;
@@ -63,15 +70,15 @@ public class Manager {
 		board = new Board();
 		board.reset();
 
-		// Communication
-		communication = new SerialCommunication();
-
-		// Debug
-		String fileName = ".\\data\\openning5.txt";//.\\debug\\2015-11-30 02-25-18.";
-		communication = new FileCommunication(fileName);
-		
-
+		// Game
 		sm = new StateMachine(board);
+
+		// Frame
+		frame = new ChessBoardMain();
+		frame.boardPanel.setBoard(board);
+
+		// Communication
+		serial = new SerialHelper();
 	}
 
 	private void initialize() {
@@ -79,26 +86,16 @@ public class Manager {
 		preferences = new Properties(getDefaultPreferences());
 		loadPreferences();
 
-		if (dataDebug) {
+		if (dataDebug)
 			output = new DebugOutputListener(debugPath);
-			output.reset();
-		}
 
 		initEvents();
-
+		initCommunicationEvents();
 		initFrameEvents();
 	}
 
-	public void setFrame(ChessBoardMain frame) {
-		this.frame = frame;
-
-		frame.boardPanel.setBoard(board);
-
-		/*
-		// apply preferences to UI
-		frame.port_combo.addItem(communication.getPortName());
-		frame.port_combo.setSelectedItem(communication.getPortName());
-		*/
+	public ChessBoardMain getFrame() {
+		return frame;
 	}
 
 	private Properties getDefaultPreferences() {
@@ -117,12 +114,19 @@ public class Manager {
 			e.printStackTrace();
 		}
 
-		String portName = preferences.getProperty("Communication.Port");
-		communication.setPortName(portName);
-
 		dataDebug = Boolean.parseBoolean(preferences.getProperty("Debug.Output", "false"));
 		debugPath = preferences.getProperty("Debug.Path", System.getProperty("user.dir") + "/debug");
 		visualDebug = Boolean.parseBoolean(preferences.getProperty("Debug.Positions", "false"));
+		
+		String portName = preferences.getProperty("Communication.Port");
+		if (portName.equals("FILE")) {
+			fileInput = true;
+			String fileName = preferences.getProperty("Communication.File");
+			communication = new FileCommunication(fileName);
+		} else {
+			if (changePort(portName))
+				frame.port_combo.addItem(communication.getPortName());
+		}
 	}
 
 	private void savePreferences() {
@@ -165,6 +169,7 @@ public class Manager {
 
 	public void initEvents() {
 
+		// StateMaching
 		sm.addEventListener(new StateMachineEventListener() {
 			protected void gameReset() {
 				board.reset();
@@ -173,7 +178,23 @@ public class Manager {
 			}
 		});
 
-		// Communication
+		// Board
+		board.addBoardEventListener(new BoardEventListener() {
+			public void boardMove() {
+				doBoardMove();
+			}
+
+			public void boardChanged() {
+				doBoardUpdate();
+			}
+		});
+
+	}
+
+	private void initCommunicationEvents() {
+
+		communication.removeAllListeners();
+		
 		if (dataDebug)
 			communication.addListener(output);
 
@@ -192,21 +213,9 @@ public class Manager {
 				sm.processEvent(event);
 			}
 		});
-
-		// Board
-		board.addBoardEventListener(new BoardEventListener() {
-			public void boardMove() {
-				doBoardMove();
-			}
-
-			public void boardChanged() {
-				doBoardUpdate();
-			}
-		});
-
 	}
 
-	public void initFrameEvents() {
+	private void initFrameEvents() {
 
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -245,15 +254,35 @@ public class Manager {
 
 	}
 
-	public void fillPorts() {
+	private void fillPorts() {
 		frame.port_combo.removeAllItems();
-		List<String> ports = SerialHelper.getPortsAvailable();
+		List<String> ports = serial.getPorts();
 		for (String port : ports)
 			frame.port_combo.addItem(port);
 	}
 
-	public void changePort(String portName) {
-		communication.setPortName(portName);
+	public boolean changePort(String portName) {
+
+		if (fileInput)
+			return false;
+
+		if (communication != null) {
+			communication.stop();
+			communication = null;
+		}
+
+		if (portName.length() != 0) {
+			try {
+				communication = new SerialCommunication(portName);
+				initCommunicationEvents();
+				return true;
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(frame, e.getMessage());
+			}
+		}
+
+		communication = new EmptyCommunication(portName);
+		return false;
 	}
 
 	public void copyToClipboard() {

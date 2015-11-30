@@ -1,4 +1,4 @@
-package Core;
+package Communication;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -7,6 +7,8 @@ import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+
+import Core.Program;
 
 public class rxtxNativeHelper {
 

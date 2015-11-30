@@ -22,7 +22,9 @@ public class SerialCommunication extends BoardCommunication {
 	InputStream inStream;
 	OutputStream outStream;
 	
-	public SerialCommunication() {
+	public SerialCommunication(String portName) throws IOException {
+		this.portName = portName;
+		connect();
 	}
 
 	protected Event getEvent() {
@@ -48,9 +50,10 @@ public class SerialCommunication extends BoardCommunication {
 		switch (eventType) {
 		case BoardChange:
 			String data = readLine(br);
-			return new Event(Event.Type.BoardChange, new BoardData(data));
-		case Move:
-			return new Event(Event.Type.Move);
+			return new Event(eventType, new BoardData(data));
+		case ButtonWhite:
+		case ButtonBlack:
+			return new Event(eventType);
 		default:
 			return null;
 		}
@@ -65,26 +68,11 @@ public class SerialCommunication extends BoardCommunication {
 		}
 	}
 	
-	public String getPortName(String portName) {
+	public String getPortName() {
 		return portName;
 	}
 
-	public void setPortName(String portName) {
-
-		disconnect();
-		this.portName = portName;
-		try {
-			
-			connect(portName);
-		} catch (IOException e) {
-			// TODO
-			portName = "";
-			disconnect();
-			e.printStackTrace();
-		}
-	}
-
-	public void connect(String portName) throws IOException {
+	public void connect() throws IOException {
 		try {
 			// Obtain a CommPortIdentifier object for the port you want to open
 			CommPortIdentifier portId = CommPortIdentifier

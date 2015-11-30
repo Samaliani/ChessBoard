@@ -116,7 +116,8 @@ public class StateMachine {
 	private void processWait(Event event) {
 
 		switch (event.getType()) {
-		case Move:
+		case ButtonWhite:
+		case ButtonBlack:
 			currentState = processMove();
 			break;
 		case BoardChange:
