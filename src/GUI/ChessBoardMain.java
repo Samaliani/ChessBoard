@@ -18,6 +18,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.ListSelectionModel;
 
 public class ChessBoardMain extends javax.swing.JFrame {
+	
+	public static String FrameId = "frame";
+	
 	public static final long serialVersionUID = 0;
 	public ChessBoardPanel boardPanel;
 	public final JTextPane notation_text = new JTextPane();

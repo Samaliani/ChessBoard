@@ -5,7 +5,6 @@ import java.util.Enumeration;
 import java.util.List;
 
 import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
 
 public class SerialHelper {
 

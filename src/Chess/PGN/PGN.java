@@ -6,29 +6,42 @@ import Chess.Move;
 public class PGN {
 
 	Board board;
-		
-	public PGN(Board board)
-	{
-		this.board = board;		
+
+	public PGN(Board board) {
+		this.board = board;
 	}
-	
-	public String exportMoves()
-	{
+
+	public String exportMoves() {
 		String result = "";
 		int moveNo = 1;
-		
-		for(int i = 0; i < board.getMoveCount(); i++)
-		{
+
+		for (int i = 0; i < board.getMoveCount(); i++) {
 			Move move = board.getMove(i);
 			if (i % 2 == 0)
 				result += String.format("%d.%s", moveNo, move.toString());
-			else
-			{
+			else {
 				result += String.format(" %s ", move.toString());
 				moveNo++;
 			}
 		}
 		return result;
-		
 	}
+	
+	public String exportMovesLine() {
+		String result = "";
+		int moveNo = 1;
+
+		for (int i = 0; i < board.getMoveCount(); i++) {
+			Move move = board.getMove(i);
+			if (i % 2 == 0)
+				result += String.format("%d.%s", moveNo, move.toString());
+			else {
+				result += String.format(" %s ", move.toString());
+				result += "\r\n";
+				moveNo++;
+			}
+		}
+		return result;
+	}
+	
 }

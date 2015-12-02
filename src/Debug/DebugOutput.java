@@ -1,4 +1,4 @@
-package Core;
+package Debug;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -7,15 +7,14 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import Communication.CommunicationListener;
 import Communication.Event;
 
-public class DebugOutputListener extends CommunicationListener {
+public class DebugOutput {
 
 	String path;
 	FileWriter writer;
 
-	public DebugOutputListener(String path) {
+	public DebugOutput(String path) {
 		this.path = path;
 		reset();
 	}

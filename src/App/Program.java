@@ -1,4 +1,4 @@
-package Core;
+package App;
 
 import javax.swing.JFrame;
 import javax.swing.UIManager;
@@ -13,7 +13,7 @@ public class Program {
 		rxtxNativeHelper.initialize();
 		initUIManager();
 		
-		Manager manager = new Manager();
+		final ChessBoardManager manager = new ChessBoardManager();
 
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {

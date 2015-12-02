@@ -149,6 +149,8 @@ public class ChessBoardPanel extends JPanel {
 		final int width = getWidth();
 		final int height = getHeight();
 
+		g.fillRect(0, 0, width, height);
+		
 		int cellSize = Math.min(width, height) / 8;
 		int boardSize = 8 * cellSize;
 

@@ -26,9 +26,9 @@ public class MainLogic {
 		}
 	}
 
-	static public boolean canMovePiece(Board board, Piece piece) {
+	static public boolean canMovePiece(Board board, Piece piece, Position target) {
 		Position pos = piece.getPosition();
-		piece.move(new Position());
+		piece.move(target);
 		boolean isCheck = isCheck(board, piece.getColor());
 		piece.move(pos);
 		return !isCheck;

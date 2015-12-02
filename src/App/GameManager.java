@@ -1,25 +1,32 @@
-package LowLevel;
+package App;
 
-import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.List;
 
 import Chess.Board;
 import Chess.Piece.Color;
 import Chess.Position;
+import Communication.CommunicationListener;
 import Communication.Event;
+import Core.Manager;
+import LowLevel.BoardData;
+import LowLevel.Utils;
+import Core.Component;
+import Core.EventManager;
+import Core.EventProvider;
 
-public class StateMachine {
+public class GameManager extends Component implements EventProvider, CommunicationListener {
 
 	enum State {
 		Wait, Invalid
-	};
+	}
 
-	// Main data
+	public static final String GameManagerId = "game";;
+
 	Board board;
 
 	// Currents
 	State currentState;
-
 	// Move
 	BoardData turnData;
 	BoardData lastData;
@@ -30,35 +37,38 @@ public class StateMachine {
 	BoardData whiteData;
 	BoardData blackData;
 
-	public StateMachine(Board board) {
+	public GameManager(Manager manager, Board board) {
 
+		super(manager);
 		this.board = board;
 		currentState = State.Wait;
 		resetTurn();
 	}
 
-	// --------------------------------------
-	// Events
-	// --------------------------------------
-
-	List<StateMachineEventListener> listeners = new ArrayList<StateMachineEventListener>();
-
-	public void addEventListener(StateMachineEventListener listener) {
-		listeners.add(listener);
+	@Override
+	public String getId() {
+		return GameManagerId;
 	}
 
-	public void raiseBoardChangeEvent(BoardData data) {
-		for (StateMachineEventListener listener : listeners)
-			listener.boardChanged(data);
-	}	
+	@Override
+	public void appInitialization() {
+	}
 
-	public void raiseGameResetEvent() {
-		for (StateMachineEventListener listener : listeners)
-			listener.gameReset();
-	}	
-	
+	@Override
+	public void appFinalization() {
+	}
+
+	@Override
+	public void appStart() {
+	}
+
+	@Override
+	public boolean isSupportedListener(EventListener listener) {
+		return (listener instanceof GameEventListener);
+	}
+
+	@Override
 	public void processEvent(Event event) {
-
 		switch (currentState) {
 		case Wait:
 			processWait(event);
@@ -69,6 +79,17 @@ public class StateMachine {
 		default:
 			assert false;
 		}
+	}
+
+	@Override
+	public void portChanged(String portName) {
+	}
+
+	private void raiseGameResetEvent() {
+		EventManager eventManager = (EventManager) getManager().getComponent(EventManager.EventManagerId);
+		List<EventListener> listeners = eventManager.getListeners(getId());
+		for (EventListener listener : listeners)
+			((GameEventListener) listener).gameReset();
 	}
 
 	private BoardData getAppeared(BoardData begin, BoardData end) {
@@ -95,23 +116,17 @@ public class StateMachine {
 
 	private byte getKingRank(BoardData data) {
 		if (board.getTurnColor() == Color.White)
-			return data.data[0];
+			return data.getData(0);
 		else
-			return data.data[7];
+			return data.getData(7);
 	}
 
 	private void setKingRank(BoardData data, byte rank) {
 		if (board.getTurnColor() == Color.White)
-			data.data[0] = rank;
+			data.setData(0, rank);
 		else
-			data.data[7] = rank;
+			data.setData(7, rank);
 	}
-
-	/*private void processStart() {
-
-		currentState = State.Wait;
-		resetTurn();
-	}*/
 
 	private void processWait(Event event) {
 
@@ -130,11 +145,11 @@ public class StateMachine {
 	}
 
 	private State processMove() {
-		
+
 		if (lastData.equals(turnData))
 			return State.Wait;
-		
-		int delta = turnData.pieceCount - lastData.pieceCount;
+
+		int delta = turnData.getPieceCount() - lastData.getPieceCount();
 		BoardData appeared = getAppeared(turnData, lastData);
 		BoardData disappeared = getDisappeared(turnData, lastData);
 
@@ -142,11 +157,11 @@ public class StateMachine {
 		// Move
 		if (delta == 0) {
 			// Castling
-			if (appeared.pieceCount == 2) {
+			if (appeared.getPieceCount() == 2) {
 				int disRank = getKingRank(disappeared);
-				setKingRank(disappeared, (byte)(disRank & 0x08));
+				setKingRank(disappeared, (byte) (disRank & 0x08));
 				int appRank = getKingRank(appeared);
-				setKingRank(appeared, (byte)(appRank & 0x22));
+				setKingRank(appeared, (byte) (appRank & 0x22));
 				success = makeCastling(Utils.getPiecePosition(disappeared), Utils.getPiecePosition(appeared));
 			} else
 				// Regular
@@ -156,19 +171,19 @@ public class StateMachine {
 		else if ((delta == 1) && (inactivePos != -1)) {
 
 			// Regular take
-			if (appeared.pieceCount == 0)
+			if (appeared.getPieceCount() == 0)
 				success = makeMove(Utils.getPiecePosition(disappeared), inactivePos);
 			// An passant
 			else {
 				BoardData disActive = BoardData.intersect(getActiveData(), disappeared);
-				if ((disActive.pieceCount == 1) && (appeared.pieceCount == 1))
+				if ((disActive.getPieceCount() == 1) && (appeared.getPieceCount() == 1))
 					success = makeMove(Utils.getPiecePosition(disActive), Utils.getPiecePosition(appeared));
 			}
 		}
 
 		if (!success)
 			return State.Invalid;
-		
+
 		resetTurn();
 		turnData = lastData;
 		return State.Wait;
@@ -185,7 +200,7 @@ public class StateMachine {
 
 			if (data.equals(BoardData.initialData)) {
 				raiseGameResetEvent();
-				//currentState = State.Start;
+				board.reset();
 				currentState = State.Wait;
 				resetTurn();
 			}
@@ -201,25 +216,25 @@ public class StateMachine {
 			return State.Wait;
 		}
 
-		if (data.pieceCount > turnData.pieceCount)
+		if (data.getPieceCount() > turnData.getPieceCount())
 			return State.Invalid;
 
 		BoardData dissapeared = getDisappeared(turnData, data);
 
 		BoardData disActive = BoardData.intersect(getActiveData(), dissapeared);
-		if (disActive.pieceCount > 2)
+		if (disActive.getPieceCount() > 2)
 			return State.Invalid;
-		else if (disActive.pieceCount == 2) {
+		else if (disActive.getPieceCount() == 2) {
 			// Possible Castling
 			return State.Wait;
-		} else if (disActive.pieceCount == 1) {
+		} else if (disActive.getPieceCount() == 1) {
 			activePos = Utils.getPiecePosition(disActive);
 		}
 
 		BoardData disInactive = BoardData.intersect(getInactiveData(), dissapeared);
-		if (disInactive.pieceCount > 1)
+		if (disInactive.getPieceCount() > 1)
 			return State.Invalid;
-		else if (disInactive.pieceCount == 1) {
+		else if (disInactive.getPieceCount() == 1) {
 			inactivePos = Utils.getPiecePosition(disInactive);
 		}
 

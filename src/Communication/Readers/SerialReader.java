@@ -1,4 +1,4 @@
-package Communication;
+package Communication.Readers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,6 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
+import javax.swing.JOptionPane;
+
+import Communication.Event;
+import Communication.Event.Type;
 import LowLevel.BoardData;
 
 import gnu.io.CommPortIdentifier;
@@ -14,39 +18,46 @@ import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
-public class SerialCommunication extends BoardCommunication {
+public class SerialReader extends BoardReader {
 
 	String portName;
 	SerialPort serialPort;
-	
+
 	InputStream inStream;
 	OutputStream outStream;
-	
-	public SerialCommunication(String portName) throws IOException {
-		this.portName = portName;
-		connect();
+
+	public SerialReader(String portName) {
+		super(portName);
 	}
 
-	protected Event getEvent() {
+	public Event getEvent() {
 
 		if (serialPort == null)
 			return null;
-		
+
 		try {
 			if (inStream.available() == 0)
 				return null;
 		} catch (IOException e) {
 			e.printStackTrace();
+			// TODO Message Signal lost
+			disconnect();
+			JOptionPane.showMessageDialog(null, "Connection to ChessBoard is lost.", "Connection", JOptionPane.ERROR_MESSAGE);
 			return null;
 		}
-		
+
 		InputStreamReader is = new InputStreamReader(inStream);
 		BufferedReader br = new BufferedReader(is);
-	
+
 		String line = readLine(br);
 
-		int id = Integer.parseInt(line, 16);
-		Event.Type eventType = Event.Type.fromInt(id);
+		Event.Type eventType = Type.NoEvent;
+		try {
+			int id = Integer.parseInt(line, 16);
+			eventType = Event.Type.fromInt(id);
+		} catch (NumberFormatException e) {
+		}
+		
 		switch (eventType) {
 		case BoardChange:
 			String data = readLine(br);
@@ -67,7 +78,7 @@ public class SerialCommunication extends BoardCommunication {
 			return "";
 		}
 	}
-	
+
 	public String getPortName() {
 		return portName;
 	}
@@ -75,8 +86,7 @@ public class SerialCommunication extends BoardCommunication {
 	public void connect() throws IOException {
 		try {
 			// Obtain a CommPortIdentifier object for the port you want to open
-			CommPortIdentifier portId = CommPortIdentifier
-					.getPortIdentifier(portName);
+			CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier(portName);
 
 			// Get the port's ownership
 			SerialPort port = (SerialPort) portId.open("ChessBoard", 1000);
@@ -89,9 +99,9 @@ public class SerialCommunication extends BoardCommunication {
 			// open, close the port before throwing an exception.
 			outStream = port.getOutputStream();
 			inStream = port.getInputStream();
-			
-			serialPort = port; 
-			
+
+			serialPort = port;
+
 		} catch (NoSuchPortException e) {
 			throw new IOException(e.getMessage());
 		} catch (PortInUseException e) {
@@ -107,8 +117,7 @@ public class SerialCommunication extends BoardCommunication {
 
 		try {
 			// Set serial port to 57600bps-8N1..my favourite
-			port.setSerialPortParams(baudRate, SerialPort.DATABITS_8,
-					SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+			port.setSerialPortParams(baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 
 			port.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 		} catch (UnsupportedCommOperationException ex) {
@@ -128,10 +137,4 @@ public class SerialCommunication extends BoardCommunication {
 		}
 	}
 
-	public void stop()
-	{
-		super.stop();
-		disconnect();
-	}
-	
 }

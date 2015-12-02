@@ -13,6 +13,8 @@ import Chess.Logic.PieceLogic;
 
 public class Board {
 
+	public static final String BoardId = "board";
+	
 	List<Move> moves = new ArrayList<Move>();
 	List<Piece> pieces = new ArrayList<Piece>();
 
@@ -45,7 +47,7 @@ public class Board {
 		else
 			return false;
 
-		if (!MainLogic.canMovePiece(this, piece))
+		if (!MainLogic.canMovePiece(this, piece, position))
 			return false;
 
 		Position ambiguity = getAmbiguity(piece, position, type);
@@ -174,9 +176,9 @@ public class Board {
 			listener.boardMove();
 	}
 	
-	public void raiseBoardChangeEvent() {
+	public void raiseBoardResetEvent() {
 		for (BoardEventListener listener : listeners)
-			listener.boardChanged();
+			listener.boardReset();
 	}	
 
 	// --------------------------------------
@@ -297,7 +299,7 @@ public class Board {
 	public void reset() {
 		// Start position
 		loadFEN(cStartFen);
-		raiseBoardChangeEvent();
+		raiseBoardResetEvent();
 	}
 
 	private void clear() {

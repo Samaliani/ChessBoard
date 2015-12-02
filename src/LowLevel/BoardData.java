@@ -26,7 +26,7 @@ public class BoardData {
 	}
 
 	public static BoardData initialData = new BoardData("ffff00000000ffff");
-	
+
 	private void update() {
 		pieceCount = 0;
 		for (int row = 0; row < 8; row++)
@@ -41,6 +41,14 @@ public class BoardData {
 		return data;
 	}
 
+	public byte getData(int index) {
+		return data[index];
+	}
+
+	public void setData(int index, byte value) {
+		data[index] = value;
+	}
+	
 	public int getPieceCount() {
 		return pieceCount;
 	}
@@ -62,7 +70,7 @@ public class BoardData {
 	public boolean equals(BoardData data) {
 		if (data.pieceCount != pieceCount)
 			return false;
-		
+
 		for (int i = 0; i < 8; i++)
 			if (this.data[i] != data.data[i])
 				return false;
