@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import javax.swing.JOptionPane;
 
+import App.Messages;
 import Communication.Readers.BoardReader;
 import Communication.Readers.FileBoardReader;
 import Communication.Readers.SerialReader;
@@ -21,7 +22,6 @@ public class CommunicationManager extends Component implements Runnable,
 
 	public static final String CommunicationManagerId = "communication";
 
-	String portName;
 	BoardReader reader;
 
 	boolean fileInput;
@@ -29,6 +29,7 @@ public class CommunicationManager extends Component implements Runnable,
 
 	public CommunicationManager(Manager manager) {
 		super(manager);
+		resetReader();
 	}
 
 	@Override
@@ -39,11 +40,17 @@ public class CommunicationManager extends Component implements Runnable,
 	@Override
 	public void appStart() {
 
+		doPortChanged(reader.getPortName());
+
 		Thread eventThread = new Thread(this);
 		eventThread.setDaemon(true);
 		eventThread.start();
 	}
-	
+	@Override
+	public void appFinalization() {
+		stop();
+	}
+		
 	@Override
 	public boolean isSupportedListener(EventListener listener) {
 		return (listener instanceof CommunicationListener);
@@ -71,6 +78,23 @@ public class CommunicationManager extends Component implements Runnable,
 		}
 	}
 
+	private void resetReader(){
+		reader = new BoardReader("");
+	}
+
+	private void readerDisconnect(boolean silent){
+
+		try {
+			reader.disconnect();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		resetReader();
+		if (!silent)
+			doPortChanged(reader.getPortName());
+	}
+
 	public void run() {
 		while (!isStop) {
 			if (reader == null) {
@@ -78,7 +102,14 @@ public class CommunicationManager extends Component implements Runnable,
 				continue;
 			}
 
-			Event event = reader.getEvent();
+			Event event = null;
+			try {
+				event = reader.getEvent();
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(null, Messages.Communication.ConnectionLost, Messages.Communication.ModuleName, JOptionPane.ERROR_MESSAGE);
+				readerDisconnect(false);
+				continue;
+			}
 			if (event != null)
 				doProcessEvent(event);
 			else
@@ -90,10 +121,24 @@ public class CommunicationManager extends Component implements Runnable,
 		} catch (IOException e) {
 		}
 	}
+	
+	// Synchronous events to the board
+	public void sendEvent(OutEvent event)
+	{
+		if (reader == null)
+			return;
+		
+		try {
+			reader.sendEvent(event);
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, Messages.Communication.ConnectionLost, Messages.Communication.ModuleName, JOptionPane.ERROR_MESSAGE);
+			readerDisconnect(false);
+		}
+	}
 
 	@Override
 	public void loadSettings(Properties preferences) {
-		portName = preferences.getProperty("Communication.Port");
+		String portName = preferences.getProperty("Communication.Port", "");
 		if (portName.equals("FILE")) {
 			fileInput = true;
 			String fileName = preferences.getProperty("Communication.File");
@@ -109,7 +154,7 @@ public class CommunicationManager extends Component implements Runnable,
 
 	@Override
 	public void saveSettings(Properties preferences) {
-		preferences.setProperty("Communication.Port", portName);
+		preferences.setProperty("Communication.Port", reader.getPortName());
 	}
 
 	public void stop() {
@@ -120,18 +165,10 @@ public class CommunicationManager extends Component implements Runnable,
 
 		if (fileInput)
 			return;
-		if (this.portName == portName)
+		if (reader.getPortName() == portName)
 			return;
 		
-		if (reader != null) {
-			try {
-				reader.disconnect();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			reader = null;
-		}
-
+		readerDisconnect(true);
 		if (portName.length() != 0) {
 			try {
 				reader = new SerialReader(portName);
@@ -140,9 +177,8 @@ public class CommunicationManager extends Component implements Runnable,
 			} 
 			catch (IOException e) {
 				JOptionPane.showMessageDialog(null,
-						String.format("Unable to connect to %s.", portName),
-						"Connection", JOptionPane.ERROR_MESSAGE);
-				reader = new BoardReader(portName);
+						String.format(Messages.Communication.UnableToConnect, portName), Messages.Communication.ModuleName, JOptionPane.ERROR_MESSAGE);
+				readerDisconnect(false);
 			}
 		}
 	}

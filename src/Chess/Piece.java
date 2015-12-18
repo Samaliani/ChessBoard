@@ -17,14 +17,26 @@ public class Piece {
 			}
 		}
 
-		public static Color not(Color c) {
-			if (c == White)
+		public char toChar() {
+			switch (this) {
+			case White:
+				return 'W';
+			case Black:
+				return 'B';
+			default:
+				assert false;
+				return 'W';
+			}
+		}
+
+		public Color inverse(){
+			if (this== White)
 				return Black;
 			else
 				return White;
 		}
 	}
-	
+
 	public enum Type {
 
 		Pawn, Knight, Bishop, Rook, Queen, King;
@@ -49,8 +61,8 @@ public class Piece {
 			}
 		}
 
-		public static String toChar(Type pt, boolean usePawnLetter) {
-			switch (pt) {
+		public String toChar(boolean usePawnLetter) {
+			switch (this) {
 			case Pawn:
 				if (usePawnLetter)
 					return "P";
@@ -71,7 +83,6 @@ public class Piece {
 			}
 		}
 	}
-	
 
 	Type type;
 	Color color;

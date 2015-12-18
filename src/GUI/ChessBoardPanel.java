@@ -16,8 +16,11 @@ import Chess.Position;
 import LowLevel.BoardData;
 
 public class ChessBoardPanel extends JPanel {
-	public static final long serialVersionUID = 0;
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7125947909580273364L;
 	private Board board;
 	private BoardData data;
 	private SVGIcon helper;
@@ -49,8 +52,7 @@ public class ChessBoardPanel extends JPanel {
 			String key = getPieceStr(t, color);
 
 			String name = "/Resources/sprites/" + key + ".svg";
-			InputStream stream = ChessBoardPanel.class
-					.getResourceAsStream(name);
+			InputStream stream = ChessBoardPanel.class.getResourceAsStream(name);
 			URI uri;
 			try {
 				uri = SVGCache.getSVGUniverse().loadSVG(stream, key);
@@ -64,32 +66,30 @@ public class ChessBoardPanel extends JPanel {
 		if (data == null)
 			return false;
 
-		boolean piece = (board.getPiece(new Position(x, 7 - y)) != null);
+		boolean piece = (board != null) && (board.getPiece(new Position(x, 7 - y)) != null);
 		boolean place = (((data.getData()[7 - y]) & (1 << (7 - x))) != 0);
 		return place != piece;
 	}
-	
-	
-	private Color getMarkColor(Color color)
-	{
+
+	private Color getMarkColor(Color color) {
 		float[] rgb = new float[3];
 		rgb = color.getRGBColorComponents(rgb);
-	
+
 		float sum = 0;
-		for(float value : rgb)
+		for (float value : rgb)
 			sum += value;
-		
-		float ampC = (float)2.0;
+
+		float ampC = (float) 2.0;
 		float red = rgb[0] * ampC;
 		rgb[0] = red;
 		if (red > 1)
-			for(int i = 0; i < rgb.length; i++)
+			for (int i = 0; i < rgb.length; i++)
 				rgb[i] /= red;
 
 		float sum2 = rgb[1] + rgb[2];
 		rgb[1] *= (sum - rgb[0]) / sum2;
 		rgb[2] *= (sum - rgb[0]) / sum2;
-		return new Color(rgb[0], rgb[1], rgb[2]);		
+		return new Color(rgb[0], rgb[1], rgb[2]);
 	}
 
 	private void drawBoard(Graphics g, int x, int y, int cellSize) {
@@ -109,8 +109,7 @@ public class ChessBoardPanel extends JPanel {
 					currentColor = getMarkColor(currentColor);
 
 				g.setColor(currentColor);
-				g.fillRect(x + j * cellSize, y + i * cellSize, cellSize,
-						cellSize);
+				g.fillRect(x + j * cellSize, y + i * cellSize, cellSize, cellSize);
 			}
 	}
 
@@ -128,20 +127,23 @@ public class ChessBoardPanel extends JPanel {
 				Piece piece = board.getPiece(new Position(j, 7 - i));
 				if (piece != null) {
 					helper.setSvgURI(sprites.get(getPieceStr(piece)));
-					helper.paintIcon(this, g, x + delta + j * cellSize, y
-							+ (i + 1) * cellSize - pieceSize);
+					helper.paintIcon(this, g, x + delta + j * cellSize, y + (i + 1) * cellSize - pieceSize);
 				}
 			}
 	}
 
 	public void setBoard(Board board) {
 		this.board = board;
-		revalidate();
+		repaint();
+	}
+	
+	public Board getBoard(){
+		return board;
 	}
 
 	public void setData(BoardData data) {
 		this.data = data;
-		revalidate();
+		repaint();
 	}
 
 	public void paintComponent(Graphics g) {
@@ -149,8 +151,9 @@ public class ChessBoardPanel extends JPanel {
 		final int width = getWidth();
 		final int height = getHeight();
 
+		g.setColor(getBackground());
 		g.fillRect(0, 0, width, height);
-		
+
 		int cellSize = Math.min(width, height) / 8;
 		int boardSize = 8 * cellSize;
 

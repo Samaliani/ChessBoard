@@ -2,13 +2,14 @@ package Debug;
 
 import java.util.Properties;
 
-import App.GameEventListener;
+import Chess.Game;
 import Communication.CommunicationListener;
 import Communication.Event;
 import Core.Manager;
 import Core.Component;
 import Core.SettingSubscriber;
 import GUI.ChessBoardMain;
+import Game.GameEventListener;
 
 public class Debugger extends Component implements SettingSubscriber, GameEventListener, CommunicationListener {
 
@@ -57,9 +58,22 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 	}
 
 	@Override
-	public void gameReset() {
-		if (dataDebug)
-			debugOutput.reset();
+	public void beforeGame(Game game){
+	}
+	
+	@Override
+	public void startGame(Game game) {
+		if (dataDebug) {
+			debugOutput.reset(game.saveFEN());
+		}
+	}
+
+	@Override
+	public void makeMove(Game game) {
+	}
+
+	@Override
+	public void endGame(Game game) {
 	}
 
 	@Override
@@ -67,7 +81,6 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 		if (visualDebug)
 			if (event.getData() != null) {
 				frame.boardPanel.setData(event.getData());
-				frame.boardPanel.repaint();
 			}
 
 		if (dataDebug) {

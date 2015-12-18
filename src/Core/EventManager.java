@@ -26,7 +26,7 @@ public class EventManager extends Component implements ManagerExtender {
 	};
 
 	@Override
-	public void appStart() {
+	public void appInitialization() {
 		isStarted = true;
 		updateTable();
 	}

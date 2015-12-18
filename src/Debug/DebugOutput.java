@@ -7,6 +7,7 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import Chess.Board;
 import Communication.Event;
 
 public class DebugOutput {
@@ -16,7 +17,6 @@ public class DebugOutput {
 
 	public DebugOutput(String path) {
 		this.path = path;
-		reset();
 	}
 
 	public void processEvent(Event event) {
@@ -61,12 +61,29 @@ public class DebugOutput {
 		}
 	}
 	
-	public void reset() {
+	public void reset(String fen) {
 
 		closeWriter();
-		
+
 		Format formatter = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
-		openWriter(formatter.format(new Date()));
+		String fileName = formatter.format(new Date());
+		
+		saveFen(fileName + ".fen", fen);
+		openWriter(fileName);
+	}
+	
+	private void saveFen(String fileName, String fen) {
+		
+		if(!fen.equals(Board.StartFEN))
+		{
+			try {
+				writer = new FileWriter(path + "/" + fileName);
+				writer.write(fen);
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

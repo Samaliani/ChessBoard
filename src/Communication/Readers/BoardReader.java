@@ -3,6 +3,7 @@ package Communication.Readers;
 import java.io.IOException;
 
 import Communication.Event;
+import Communication.OutEvent;
 
 public class BoardReader {
 
@@ -12,8 +13,11 @@ public class BoardReader {
 		this.portName = portName;
 	}
 	
-	public Event getEvent() {
+	public Event getEvent() throws IOException  {
 		return null;
+	}
+
+	public void sendEvent(OutEvent event) throws IOException {
 	}
 
 	public String getPortName() {
@@ -25,4 +29,5 @@ public class BoardReader {
 
 	public void disconnect() throws IOException {
 	}
+
 }

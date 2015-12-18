@@ -51,7 +51,7 @@ public class SettingManager extends Component implements ManagerExtender {
 			FileReader reader = new FileReader(fileName);
 			preferences.load(reader);
 		} catch (IOException e) {
-			e.printStackTrace();
+			// Settings file can absent
 		}
 
 		for (SettingSubscriber listener : subscribers)

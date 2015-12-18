@@ -28,16 +28,16 @@ public class CheckLogic extends BaseLogic {
 
 	public boolean isCheckAt(Piece king, Position target) {
 
-		Position position = king.getPosition();
+		pushPosition(king);
 		Piece piece = board.getPiece(target);
 		if (piece != null)
-			piece.move(new Position());
+			board.removePiece(piece);
 		king.move(target);
 
 		boolean result = isCheck(king);
-		king.move(position);
+		popPosition(king);
 		if (piece != null)
-			piece.move(target);
+			board.addPiece(piece);
 
 		return result;
 	}
@@ -53,7 +53,7 @@ public class CheckLogic extends BaseLogic {
 	protected List<Piece> getCheckingPieces(Piece king) {
 		List<Piece> result = new ArrayList<Piece>();
 
-		List<Piece> pieces = board.getPieces(Color.not(king.getColor()));
+		List<Piece> pieces = board.getPieces(king.getColor().inverse());
 		for (Piece piece : pieces) {
 			PieceLogic logic = MainLogic.getPieceLogic(board, piece);
 			if (logic.validateTake(king.getPosition()))

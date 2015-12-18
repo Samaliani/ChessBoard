@@ -6,10 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
-import javax.swing.JOptionPane;
-
 import Communication.Event;
 import Communication.Event.Type;
+import Communication.OutEvent;
 import LowLevel.BoardData;
 
 import gnu.io.CommPortIdentifier;
@@ -20,7 +19,6 @@ import gnu.io.UnsupportedCommOperationException;
 
 public class SerialReader extends BoardReader {
 
-	String portName;
 	SerialPort serialPort;
 
 	InputStream inStream;
@@ -30,21 +28,14 @@ public class SerialReader extends BoardReader {
 		super(portName);
 	}
 
-	public Event getEvent() {
+	@Override
+	public Event getEvent()  throws IOException {
 
 		if (serialPort == null)
 			return null;
 
-		try {
-			if (inStream.available() == 0)
-				return null;
-		} catch (IOException e) {
-			e.printStackTrace();
-			// TODO Message Signal lost
-			disconnect();
-			JOptionPane.showMessageDialog(null, "Connection to ChessBoard is lost.", "Connection", JOptionPane.ERROR_MESSAGE);
+		if (inStream.available() == 0)
 			return null;
-		}
 
 		InputStreamReader is = new InputStreamReader(inStream);
 		BufferedReader br = new BufferedReader(is);
@@ -67,6 +58,19 @@ public class SerialReader extends BoardReader {
 			return new Event(eventType);
 		default:
 			return null;
+		}
+	}
+	
+	@Override
+	public void sendEvent(OutEvent event) throws IOException {
+		
+		if (serialPort != null)
+		{
+			String value = Integer.toHexString(OutEvent.Type.toInt(event.getType()));
+			if (value.length() == 1)
+				value = "0" + value;
+			value += "\n";
+			outStream.write(value.getBytes());
 		}
 	}
 
@@ -136,5 +140,4 @@ public class SerialReader extends BoardReader {
 			serialPort = null;
 		}
 	}
-
 }

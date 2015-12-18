@@ -28,14 +28,23 @@ public class MainLogic {
 
 	static public boolean canMovePiece(Board board, Piece piece, Position target) {
 		Position pos = piece.getPosition();
+
+		Piece removedPiece = board.getPiece(target);
+		if (removedPiece != null)
+			removedPiece.move(new Position());
+
 		piece.move(target);
 		boolean isCheck = isCheck(board, piece.getColor());
+
 		piece.move(pos);
+		if (removedPiece != null)
+			removedPiece.move(target);
+
 		return !isCheck;
 	}
 
 	static public boolean isCheck(Board board, Color color) {
-		
+
 		CheckLogic logic = new CheckLogic(board);
 		return logic.isCheck(color);
 	}
@@ -45,5 +54,15 @@ public class MainLogic {
 		CheckmateLogic logic = new CheckmateLogic(board);
 		return logic.isCheckmate(color);
 	}
+	
+	static public boolean isTie(Board board, Color color){
+		TieLogic logic = new TieLogic(board);
+		return logic.isTie(color);
+	}
 
+	static public boolean isPromotion(Board board, Piece piece, Position target) {
+
+		PromotionLogic logic = new PromotionLogic(board, piece);
+		return logic.isPromotion(target);
+	}
 }

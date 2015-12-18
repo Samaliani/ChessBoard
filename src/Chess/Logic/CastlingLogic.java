@@ -61,15 +61,18 @@ public class CastlingLogic extends BaseLogic {
 		Position step = getLineStep(line);
 
 		CheckLogic logic = new CheckLogic(board);
-		
+
+		boolean success = true;
+
 		Position p = p1.plus(step);
 		for (int i = 0; i < length; i++) {
-			king.move(p);
-			if (logic.isCheckAt(king, p)) 
-				return false;
+			if (logic.isCheckAt(king, p)) {
+				success = false;
+				break;
+			}
 			p = p.plus(step);
 		}
-		
-		return true;
+
+		return success;
 	}
 }

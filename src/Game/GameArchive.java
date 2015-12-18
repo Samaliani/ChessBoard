@@ -1,4 +1,4 @@
-package App;
+package Game;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -8,8 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
-import Chess.Board;
-import Chess.BoardEventListener;
+import Chess.Game;
 import Chess.PGN.PGN;
 import Core.Component;
 import Core.Manager;
@@ -19,15 +18,13 @@ public class GameArchive extends Component implements SettingSubscriber, GameEve
 
 	static final String GameArchiveId = "archive";
 
-	Board board;
 	String fileName;
 
 	boolean archive;
 	String path;
 
-	public GameArchive(Manager manager, Board board) {
+	public GameArchive(Manager manager) {
 		super(manager);
-		this.board = board;
 	}
 
 	@Override
@@ -36,34 +33,37 @@ public class GameArchive extends Component implements SettingSubscriber, GameEve
 	}
 
 	@Override
-	public void appStart() {
-
-		gameReset();
-		// TODO save archive
-		if (archive)
-			board.addBoardEventListener(new BoardEventListener() {
-				public void boardMove() {
-					storeGame();
-				}
-			});
+	public void beforeGame(Game game){
 	}
-
+	
 	@Override
-	public void gameReset() {
+	public void startGame(Game game) {
 		Format formatter = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 		fileName = path + "/" + formatter.format(new Date()) + ".pgn";
 	}
+	
+	@Override
+	public void makeMove(Game game) {
+		if (archive)
+			storeGame(game);
+	}
+	
+	@Override
+	public void endGame(Game game){
+		if (archive)
+			storeGame(game);
+	}
 
-	public void storeGame() {
+	public void storeGame(Game game) {
 
-		int n = board.getMoveCount();
+		int n = game.getMoveCount();
 		if (n < 2)
 			return;
 
 		new File(path).mkdirs();
 		try {
 			FileWriter writer = new FileWriter(fileName);
-			PGN pgn = new PGN(board);
+			PGN pgn = new PGN(game);
 			writer.write(pgn.exportMovesLine());
 			writer.close();
 		} catch (IOException e) {

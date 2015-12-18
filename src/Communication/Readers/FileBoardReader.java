@@ -5,28 +5,19 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import Communication.Event;
+import Communication.OutEvent;
 import LowLevel.BoardData;
 
 public class FileBoardReader extends BoardReader {
 
 	String fileName;
 	BufferedReader reader;
+	
+	Event fakeEvent;
 
 	public FileBoardReader(String fileName) {
 		super("");
 		this.fileName = fileName;
-	}
-
-	@Override
-	public void connect() throws IOException
-	{
-		reader = new BufferedReader(new FileReader(fileName));
-	}
-	
-	@Override
-	public void disconnect() throws IOException
-	{
-		reader.close();
 	}
 
 	protected String readLine() {
@@ -46,7 +37,17 @@ public class FileBoardReader extends BoardReader {
 		}
 	}
 	
+	@Override
 	public Event getEvent() {
+		
+		// To resolve request position event
+		if (fakeEvent != null)
+		{
+			Event result = fakeEvent;
+			fakeEvent = null;
+			return result;
+		}
+		
 		String line = readLine();
 		if (line == null)
 			return null;
@@ -65,8 +66,28 @@ public class FileBoardReader extends BoardReader {
 			return null;
 		}
 	}
-	
+
+	@Override
 	public String getPortName() {
 		return "FILE";
+	}
+
+	@Override
+	public void sendEvent(OutEvent event) throws IOException {
+		// Start FEN can be loaded
+		if (event.getType() == OutEvent.Type.RequestBoard)
+			fakeEvent = new Event(Event.Type.BoardChange, BoardData.initialData); 			
+	}
+
+	@Override
+	public void connect() throws IOException
+	{
+		reader = new BufferedReader(new FileReader(fileName));
+	}
+	
+	@Override
+	public void disconnect() throws IOException
+	{
+		reader.close();
 	}
 }

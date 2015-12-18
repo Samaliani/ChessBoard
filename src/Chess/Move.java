@@ -3,15 +3,21 @@ package Chess;
 public class Move {
 
 	public enum Type {
-		Regular, Take, CastlingK, CastlingQ, Unknown, Invalid
+		Regular, Take, CastlingK, CastlingQ, Unknown
 	}
-	
+
 	Type type;
 	Piece.Type pieceType;
+	
+	Position start;
+	Position finish;
+	
 	Position position;
 	Position ambiguity;
 	boolean check;
 	boolean checkmate;
+	boolean promotion;
+	Piece.Type promoteTo;
 
 	public Move(Type type) {
 		assert(type == Type.CastlingK) || (type == Type.CastlingQ);
@@ -38,14 +44,14 @@ public class Move {
 
 		switch (type) {
 		case Take:
-			result += Piece.Type.toChar(pieceType, false);
+			result += pieceType.toChar(false);
 			result += getAmbiguity();
 			result += "x";
 			result += position.toString();
 			result += getMovePostfix();
 			return result;
 		case Regular:
-			result += Piece.Type.toChar(pieceType, false);
+			result += pieceType.toChar(false);
 			result += getAmbiguity();
 			result += position.toString();
 			result += getMovePostfix();
@@ -63,6 +69,11 @@ public class Move {
 		}
 	}
 
+	public void setPromotion(Piece.Type promoteTo){
+		promotion = true;
+		this.promoteTo = promoteTo; 
+	}
+	
 	private String getAmbiguity() {
 		if (ambiguity == null)
 			return "";
@@ -75,11 +86,15 @@ public class Move {
 	}
 
 	private String getMovePostfix() {
+		String postfix = "";
+		if(promotion)
+			postfix = "=" + pieceType.toChar(false);
+		
 		if (checkmate)
-			return "#";
+			return postfix + "#";
 		if (check)
-			return "+";
-		return "";
+			return postfix + "+";
+		return postfix;
 	}
 
 }

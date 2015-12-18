@@ -8,13 +8,12 @@ import gnu.io.CommPortIdentifier;
 
 public class SerialHelper {
 
-	List<String> ports;
+	static List<String> ports;
 
-	public SerialHelper() {
-		ports = getPortsAvailable();
-	}
-
-	public List<String> getPorts() {
+	static public List<String> getPorts() {
+		if (ports == null)
+			ports = getPortsAvailable();
+			
 		return ports;
 	}
 

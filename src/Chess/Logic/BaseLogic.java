@@ -1,14 +1,17 @@
 package Chess.Logic;
 
+import java.util.Stack;
+
 import Chess.Board;
+import Chess.Piece;
 import Chess.Position;
 
 public class BaseLogic {
 
 	Board board;
-	
-	public BaseLogic(Board board)
-	{
+	Stack<Position> positions = new Stack<Position>();
+
+	public BaseLogic(Board board) {
 		this.board = board;
 	}
 
@@ -41,5 +44,13 @@ public class BaseLogic {
 	protected Position getLineStep(Position line) {
 		int size = getLineLength(line);
 		return new Position(line.getCol() / size, line.getRow() / size);
+	}
+
+	protected void pushPosition(Piece piece) {
+		positions.push(piece.getPosition());
+	}
+
+	protected void popPosition(Piece piece) {
+		piece.move(positions.pop());
 	}
 }
