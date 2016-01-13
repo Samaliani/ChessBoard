@@ -50,6 +50,7 @@ public class GameManager extends Component implements EventProvider,
 
 	private void reset() {
 		currentState = State.Start;
+		game.loadFEN(Board.StartFEN);		
 		sendBoardEvent(OutEvent.Type.RequestBoard);
 		resetTurn();
 	}
@@ -308,9 +309,11 @@ public class GameManager extends Component implements EventProvider,
 			BoardData data = event.getData();
 
 			currentState = processBoardChange(data);
+			if (currentState != State.Invalid)
+				sendBoardEvent(OutEvent.Type.NoErrorSignal);
 
 			if (data.equals(BoardData.initialData)) {
-				reset();
+				finishGame(GameResult.Unknown);
 			}
 		}
 	}

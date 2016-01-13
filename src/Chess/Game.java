@@ -32,6 +32,8 @@ public class Game {
 	}
 
 	public void loadFEN(String fen) {
+		moves.clear();
+		result = GameResult.Unknown;
 		board.loadFEN(fen);
 	}
 
@@ -173,10 +175,10 @@ public class Game {
 		if (ambiguityPieces.size() == 0)
 			return null;
 
-		Position ambiguity = new Position(ambiguityPieces.get(0).getPosition());
+		Position ambiguity = new Position(piece.getPosition().getCol(), target.getRow());
 		for (Piece p : ambiguityPieces)
 			if (p.getPosition().getCol() == piece.getPosition().getCol())
-				ambiguity = new Position(p.getPosition());
+				ambiguity = new Position(piece.getPosition());
 
 		return ambiguity;
 	}

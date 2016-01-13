@@ -112,23 +112,15 @@ public class ChessBoardMain extends javax.swing.JFrame
 
 		// Modes
 		modeButtons = new ArrayList<JToggleButton>();
-		addModeButton(0, true);
-		addModeButton(1, true);
-		addModeButton(2, false);
+		addModeButton(0);
+		addModeButton(1);
+		addModeButton(2);
 
 		JSplitPane splitPane = new JSplitPane();
 		getContentPane().add(splitPane, BorderLayout.CENTER);
 		
 		boardPanel.setPreferredSize(new Dimension(400, 400));
 		splitPane.setLeftComponent(boardPanel);
-
-		JPanel status_panel = new JPanel();
-		status_panel.setPreferredSize(new Dimension(this.getWidth(), 25));
-		getContentPane().add(status_panel, BorderLayout.SOUTH);
-		status_panel.setLayout(new BoxLayout(status_panel, BoxLayout.X_AXIS));
-
-		JLabel status_label = new JLabel("Status:");
-		status_panel.add(status_label);
 
 		JPanel tool_panel = new JPanel();
 		tool_panel.setPreferredSize(new Dimension(300, 10));
@@ -137,7 +129,7 @@ public class ChessBoardMain extends javax.swing.JFrame
 		
 		GridBagLayout gbl_tool_panel = new GridBagLayout();
 		gbl_tool_panel.columnWidths = new int[] { 150, 150 };
-		gbl_tool_panel.rowHeights = new int[] {30, 100, 0, 30, 100};
+		gbl_tool_panel.rowHeights = new int[] {30, 100, 100, 30, 100};
 		gbl_tool_panel.columnWeights = new double[] { 0.0, 1.0 };
 		gbl_tool_panel.rowWeights = new double[] { 0.0, 1.0, 1.0, 0.0, 0.0 };
 		tool_panel.setLayout(gbl_tool_panel);
@@ -155,8 +147,8 @@ public class ChessBoardMain extends javax.swing.JFrame
 		
 		resultButtons = new ArrayList<JButton>();
 		addGameResultButton(panel, App.Messages.GUI.WhiteWin);
-		addGameResultButton(panel, App.Messages.GUI.BlackWin);
 		addGameResultButton(panel, App.Messages.GUI.Tie);
+		addGameResultButton(panel, App.Messages.GUI.BlackWin);
 		
 		JPanel restul_panel = new JPanel();
 		restul_panel.setBackground(SystemColor.info);
@@ -206,14 +198,14 @@ public class ChessBoardMain extends javax.swing.JFrame
 				
 						copy_button = new JButton("Copy");
 						GridBagConstraints gbc_copy_button = new GridBagConstraints();
+						gbc_copy_button.anchor = GridBagConstraints.LINE_END;
 						gbc_copy_button.insets = new Insets(0, 0, 5, 0);
-						gbc_copy_button.fill = GridBagConstraints.BOTH;
 						gbc_copy_button.gridx = 1;
 						gbc_copy_button.gridy = 3;
 						tool_panel.add(copy_button, gbc_copy_button);
 		
 				timerPanel = new TimerPanel();
-				timerPanel.setPreferredSize(new Dimension(300, 100));
+				timerPanel.setPreferredSize(new Dimension(300, 120));
 				
 						GridBagConstraints gbc_timer_panel = new GridBagConstraints();
 						gbc_timer_panel.gridwidth = 2;
@@ -225,17 +217,16 @@ public class ChessBoardMain extends javax.swing.JFrame
 		pack();
 	}
 
-	private void addModeButton(int modeIndex, boolean enabled) {
+	private void addModeButton(int modeIndex) {
 
 		JToggleButton button = new JToggleButton();
 		button.setPreferredSize(new Dimension(100, 23));
 		
-		GameModelManager modelManager = (GameModelManager) manager.getComponent(GameModelManager.GameModelManagerId);
+		GameModelManager modelManager = (GameModelManager) manager.getComponent(GameModelManager.id);
 		button.setText(modelManager.getModelName(modeIndex));
-		button.setEnabled(enabled);
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				GameModelManager modelManager = (GameModelManager) manager.getComponent(GameModelManager.GameModelManagerId);
+				GameModelManager modelManager = (GameModelManager) manager.getComponent(GameModelManager.id);
 				modelManager.setActiveModel(modeButtons.indexOf(arg0.getSource()));
 			}
 		});
@@ -282,7 +273,7 @@ public class ChessBoardMain extends javax.swing.JFrame
 
 	private void updateActiveMode() {
 
-		GameModelManager modelManager = (GameModelManager) manager.getComponent(GameModelManager.GameModelManagerId);
+		GameModelManager modelManager = (GameModelManager) manager.getComponent(GameModelManager.id);
 		for(JToggleButton button : modeButtons)
 			button.setSelected(false);
 		modeButtons.get(modelManager.getActiveModel()).setSelected(true);
@@ -364,6 +355,8 @@ public class ChessBoardMain extends javax.swing.JFrame
 		
 		for(JToggleButton button: modeButtons)
 			button.setEnabled(enable);
+		
+		modeButtons.get(2).setEnabled(false);
 
 		for(JButton button: resultButtons)
 			button.setEnabled(!enable);
@@ -374,6 +367,7 @@ public class ChessBoardMain extends javax.swing.JFrame
 		initEvents();
 		timerModeChanged();
 		updateActiveMode();
+		updateEnabled(true);
 	}
 
 	public void initEvents() {

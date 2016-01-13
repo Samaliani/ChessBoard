@@ -49,9 +49,9 @@ public class PGN {
 		for (int i = 0; i < game.getMoveCount(); i++) {
 			Move move = game.getMove(i);
 			if (i % 2 == 0)
-				result += String.format("%d.%s", moveNo, move.toString());
+				result += String.format("%d.%s ", moveNo, move.toString());
 			else {
-				result += String.format(" %s ", move.toString());
+				result += String.format("%s ", move.toString());
 				moveNo++;
 			}
 		}
@@ -67,9 +67,9 @@ public class PGN {
 		for (int i = 0; i < game.getMoveCount(); i++) {
 			Move move = game.getMove(i);
 			if (i % 2 == 0)
-				result += String.format("%d.%s", moveNo, move.toString());
+				result += String.format("%d.%s ", moveNo, move.toString());
 			else {
-				result += String.format(" %s ", move.toString());
+				result += String.format("%s ", move.toString());
 				result += "\r\n";
 				moveNo++;
 			}

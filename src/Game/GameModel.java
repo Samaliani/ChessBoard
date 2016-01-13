@@ -1,13 +1,16 @@
 package Game;
 
+import java.util.Properties;
+
 import Chess.Game;
 import Chess.GameResult;
 import Chess.Logic.MainLogic;
 import Core.Manager;
+import Core.SettingSubscriber;
 import Timer.TimerListener;
 import Timer.TimerManager;
 
-public class GameModel implements GameEventListener, TimerListener {
+public class GameModel implements SettingSubscriber, GameEventListener, TimerListener {
 
 	Manager manager;
 	String name;
@@ -17,7 +20,7 @@ public class GameModel implements GameEventListener, TimerListener {
 		this.name = name;
 	}
 
-	private static final String id = "base";
+	public static final String id = "base";
 
 	public String getId() {
 		return id;
@@ -27,6 +30,14 @@ public class GameModel implements GameEventListener, TimerListener {
 		return name;
 	}
 
+	@Override
+	public void loadSettings(Properties preferences) {
+	}
+
+	@Override
+	public void saveSettings(Properties preferences) {
+	}
+	
 	@Override
 	public void beforeGame(Game game) {
 	}

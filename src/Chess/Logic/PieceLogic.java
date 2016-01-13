@@ -36,6 +36,19 @@ public class PieceLogic extends BaseLogic {
 			}
 		return result;
 	}
+	
+	public List<Position> getValidTakes(){
+		List<Position> result = new ArrayList<Position>();
+		for (int col = 0; col < 8; col++)
+			for (int row = 0; row < 8; row++) {
+				Position p = new Position(col, row);
+				if (p.equals(piece.getPosition()))
+					continue;
+				if (validateTake(p))
+					result.add(p);
+			}
+		return result;
+	}
 
 	public Position getTakenPosition(Position target) {
 		return null;

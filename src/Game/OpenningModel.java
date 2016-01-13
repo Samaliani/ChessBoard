@@ -1,5 +1,7 @@
 package Game;
 
+import java.util.Properties;
+
 import Chess.Game;
 import Chess.GameResult;
 import Chess.Move;
@@ -14,13 +16,13 @@ import ictk.boardgame.chess.io.SAN;
 
 public class OpenningModel extends GameModel {
 
+	String path;
 	OpenningBase opennings;
 	
 	ChessGame currentGame;
 
 	public OpenningModel(Manager manager, String name) {
 		super(manager, name);
-		loadOpennings();
 	}
 
 	private static final String id = "openning";
@@ -29,7 +31,13 @@ public class OpenningModel extends GameModel {
 	public String getId() {
 		return id;
 	}
-
+	
+	@Override
+	public void loadSettings(Properties preferences) {
+		opennings = new OpenningBase(preferences.getProperty("Openning.Path", ".\\data\\opennings\\"));
+	}
+	
+	@Override
 	public void startGame(Game game) {
 		currentGame = new ChessGame();
 	}
@@ -48,10 +56,6 @@ public class OpenningModel extends GameModel {
 	@Override
 	public void endGame(Game game) {
 		currentGame = null;
-	}
-
-	private void loadOpennings() {
-		opennings = new OpenningBase();
 	}
 
 	private ChessMove copyMove(ChessBoard board, Move move) throws AmbiguousChessMoveException, IllegalMoveException {

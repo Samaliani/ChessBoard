@@ -79,7 +79,7 @@ public class Move {
 			return "";
 
 		String result = "";
-		if (ambiguity.getCol() == position.getCol())
+		if (ambiguity.getRow() != position.getRow())
 			result += Character.forDigit(ambiguity.getRow() + 1, 10);
 		result = Character.toString((char) ((int) 'a' + ambiguity.getCol())) + result;
 		return result;

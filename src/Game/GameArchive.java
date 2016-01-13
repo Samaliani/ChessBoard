@@ -33,25 +33,31 @@ public class GameArchive extends Component implements SettingSubscriber, GameEve
 	}
 
 	@Override
-	public void beforeGame(Game game){
+	public void beforeGame(Game game) {
 	}
-	
+
 	@Override
 	public void startGame(Game game) {
 		Format formatter = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 		fileName = path + "/" + formatter.format(new Date()) + ".pgn";
 	}
-	
+
 	@Override
 	public void makeMove(Game game) {
-		if (archive)
+		if (archive&&needStoreGame())
 			storeGame(game);
 	}
-	
+
 	@Override
-	public void endGame(Game game){
-		if (archive)
+	public void endGame(Game game) {
+		if (archive&&needStoreGame())
 			storeGame(game);
+	}
+
+	public boolean needStoreGame() {
+		//GameModelManager modelManager = (GameModelManager)getManager().getComponent(GameModelManager.id);
+		//return (modelManager.getCurrentModel().getId() == GameModel.id);
+		return true;
 	}
 
 	public void storeGame(Game game) {

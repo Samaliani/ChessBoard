@@ -14,7 +14,7 @@ import Core.SettingSubscriber;
 
 public class GameModelManager extends Component implements SettingSubscriber, EventProvider {
 
-	public static final String GameModelManagerId = "models";
+	public static final String id = "models";
 
 	GameModel activeModel;
 	List<GameModel> models;
@@ -30,7 +30,7 @@ public class GameModelManager extends Component implements SettingSubscriber, Ev
 
 	@Override
 	public String getId() {
-		return GameModelManagerId;
+		return id;
 	}
 
 	public int getModelCount() {
@@ -47,6 +47,10 @@ public class GameModelManager extends Component implements SettingSubscriber, Ev
 
 	public void setActiveModel(int index) {
 		setActiveModel(models.get(index));
+	}
+	
+	public GameModel getCurrentModel(){
+		return activeModel;
 	}
 
 	private GameModel getModelById(String id) {
@@ -78,7 +82,9 @@ public class GameModelManager extends Component implements SettingSubscriber, Ev
 
 	@Override
 	public void loadSettings(Properties preferences) {
-		String modeId = preferences.getProperty("Game.Mode", "base");
+		String modeId = preferences.getProperty("Game.Mode", GameModel.id);
+		for(GameModel model : models)
+			model.loadSettings(preferences);
 		GameModel model = getModelById(modeId);
 		setActiveModel(model);
 	}
@@ -86,6 +92,8 @@ public class GameModelManager extends Component implements SettingSubscriber, Ev
 	@Override
 	public void saveSettings(Properties preferences) {
 		preferences.setProperty("Game.Mode", activeModel.getId());
+		for(GameModel model : models)
+			model.saveSettings(preferences);
 	}
 
 	@Override

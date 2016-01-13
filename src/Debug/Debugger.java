@@ -28,6 +28,7 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 		this.frame = frame;
 	}
 
+	@Override
 	public String getId() {
 		return DebuggerId;
 	}
