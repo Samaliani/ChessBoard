@@ -59,6 +59,12 @@ public class Utils {
 		}
 		return -1;
 	}
+	
+	public static BoardData getBoardData(Position position){
+		byte[] data = new byte[8];
+		data[position.getRow()] = (byte)(1 << (7 - position.getCol()));
+		return new BoardData(data);
+	}
 
 	public static BoardData loadFromFile(String fileName) throws IOException {
 

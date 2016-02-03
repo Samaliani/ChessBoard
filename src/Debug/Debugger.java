@@ -22,10 +22,12 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 	boolean visualDebug;
 
 	DebugOutput debugOutput;
+	DebugBoardExtender boardExtender; 
 
 	public Debugger(Manager manager, ChessBoardMain frame) {
 		super(manager);
 		this.frame = frame;
+		boardExtender = new DebugBoardExtender(manager);
 	}
 
 	@Override
@@ -35,6 +37,8 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 
 	@Override
 	public void appInitialization() {
+		if (visualDebug)
+			frame.boardPanel.addExtender(boardExtender);
 	}
 
 	@Override
@@ -60,6 +64,7 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 
 	@Override
 	public void beforeGame(Game game){
+		boardExtender.refresh();
 	}
 	
 	@Override
@@ -79,10 +84,10 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 
 	@Override
 	public void processEvent(Event event) {
-		if (visualDebug)
-			if (event.getData() != null) {
-				frame.boardPanel.setData(event.getData());
-			}
+
+		if (event.getData() != null) {
+			boardExtender.setEventData(event.getData());
+		}
 
 		if (dataDebug) {
 			debugOutput.processEvent(event);

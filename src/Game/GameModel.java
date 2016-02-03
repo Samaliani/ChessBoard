@@ -30,6 +30,13 @@ public class GameModel implements SettingSubscriber, GameEventListener, TimerLis
 		return name;
 	}
 
+	
+	public void selected(){
+	}
+
+	public void unselected(){
+	}
+
 	@Override
 	public void loadSettings(Properties preferences) {
 	}
@@ -70,6 +77,10 @@ public class GameModel implements SettingSubscriber, GameEventListener, TimerLis
 	
 	@Override
 	public void timerModeChanged() {
+	}
+
+	protected Manager getManager(){
+		return manager;
 	}
 	
 	protected GameManager getGameManager() {

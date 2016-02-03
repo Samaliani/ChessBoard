@@ -2,8 +2,10 @@ package GUI;
 
 import java.awt.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.io.*;
 import javax.swing.*;
 import com.kitfox.svg.*;
@@ -13,7 +15,6 @@ import Chess.Board;
 import Chess.Piece;
 import Chess.Piece.Type;
 import Chess.Position;
-import LowLevel.BoardData;
 
 public class ChessBoardPanel extends JPanel {
 
@@ -22,11 +23,13 @@ public class ChessBoardPanel extends JPanel {
 	 */
 	private static final long serialVersionUID = -7125947909580273364L;
 	private Board board;
-	private BoardData data;
 	private SVGIcon helper;
 	private Map<String, URI> sprites;
+	private List<ChessBoardPanelExtender> extenders;
 
 	public ChessBoardPanel() {
+
+		extenders = new ArrayList<ChessBoardPanelExtender>();
 
 		sprites = new HashMap<String, URI>();
 		loadSprites(Piece.Color.White);
@@ -62,34 +65,17 @@ public class ChessBoardPanel extends JPanel {
 		}
 	}
 
-	private boolean isMarkError(int x, int y) {
-		if (data == null)
-			return false;
-
-		boolean piece = (board != null) && (board.getPiece(new Position(x, 7 - y)) != null);
-		boolean place = (((data.getData()[7 - y]) & (1 << (7 - x))) != 0);
-		return place != piece;
+	private void refreshExtenders() {
+		for (ChessBoardPanelExtender extender : extenders)
+			extender.refresh();
 	}
 
-	private Color getMarkColor(Color color) {
-		float[] rgb = new float[3];
-		rgb = color.getRGBColorComponents(rgb);
-
-		float sum = 0;
-		for (float value : rgb)
-			sum += value;
-
-		float ampC = (float) 2.0;
-		float red = rgb[0] * ampC;
-		rgb[0] = red;
-		if (red > 1)
-			for (int i = 0; i < rgb.length; i++)
-				rgb[i] /= red;
-
-		float sum2 = rgb[1] + rgb[2];
-		rgb[1] *= (sum - rgb[0]) / sum2;
-		rgb[2] *= (sum - rgb[0]) / sum2;
-		return new Color(rgb[0], rgb[1], rgb[2]);
+	private Color getCellColor(int x, int y, Color color) {
+		Color result = color;
+		for (ChessBoardPanelExtender extender : extenders)
+			if (extender.needProcessSquare(x, y))
+				result = extender.getColor(result);
+		return result;
 	}
 
 	private void drawBoard(Graphics g, int x, int y, int cellSize) {
@@ -105,9 +91,7 @@ public class ChessBoardPanel extends JPanel {
 				else
 					currentColor = black;
 
-				if (isMarkError(j, i))
-					currentColor = getMarkColor(currentColor);
-
+				currentColor = getCellColor(j, i, currentColor);
 				g.setColor(currentColor);
 				g.fillRect(x + j * cellSize, y + i * cellSize, cellSize, cellSize);
 			}
@@ -136,14 +120,19 @@ public class ChessBoardPanel extends JPanel {
 		this.board = board;
 		repaint();
 	}
-	
-	public Board getBoard(){
+
+	public Board getBoard() {
 		return board;
 	}
 
-	public void setData(BoardData data) {
-		this.data = data;
-		repaint();
+	public void addExtender(ChessBoardPanelExtender extender) {
+		extender.setOwner(this);
+		extenders.add(extender);
+	}
+
+	public void removeExtender(ChessBoardPanelExtender extender) {
+		extender.setOwner(null);
+		extenders.remove(extender);
 	}
 
 	public void paintComponent(Graphics g) {
@@ -160,7 +149,9 @@ public class ChessBoardPanel extends JPanel {
 		int x = (width - boardSize) / 2;
 		int y = (height - boardSize) / 2;
 
+		refreshExtenders();
 		drawBoard(g, x, y, cellSize);
 		drawPieces(g, x, y, cellSize);
 	}
+
 }

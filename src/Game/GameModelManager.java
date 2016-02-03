@@ -75,7 +75,10 @@ public class GameModelManager extends Component implements SettingSubscriber, Ev
 		EventManager eventManager = (EventManager) getManager().getComponent(
 				EventManager.EventManagerId);
 		eventManager.removeListener(activeModel);
+		if (activeModel != null)
+			activeModel.unselected();
 		activeModel = model;
+		activeModel.selected();
 		eventManager.addListener(activeModel);
 		raiseModelChangeEvent();
 	}

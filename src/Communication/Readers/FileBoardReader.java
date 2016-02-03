@@ -52,7 +52,7 @@ public class FileBoardReader extends BoardReader {
 		if (line == null)
 			return null;
 
-		delay(100);
+		delay(1000);
 		int id = Integer.parseInt(line, 16);
 		Event.Type eventType = Event.Type.fromInt(id);
 		switch (eventType) {
