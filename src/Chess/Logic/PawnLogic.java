@@ -11,40 +11,6 @@ public class PawnLogic extends PieceLogic {
 		super(board, piece);
 	}
 
-	public boolean validateMove(Position target) {
-
-		int direction = getMoveDirection();
-		Position delta = target.minus(piece.getPosition());
-		if (delta.getCol() != 0)
-			return false;
-
-		if (!checkLine(piece.getPosition(), target, false))
-			return false;
-
-		return (delta.getRow() == direction) || ((delta.getRow() == 2 * direction)
-				&& (piece.getPosition().getRow() == getStartRow(piece.getColor())));
-	}
-
-	public boolean validateTake(Position target) {
-
-		// Validate position
-		int direction = getMoveDirection();
-		Position delta = target.minus(piece.getPosition());
-		if ((delta.getRow() != direction) || (Math.abs(delta.getCol()) != 1))
-			return false;
-
-		if (hasEnemyPiece(target))
-			return true;
-
-		Position last2Move = board.getLastPawnMove();
-		if (last2Move != null) {
-			delta = target.minus(last2Move);
-			if (delta.equals(new Position(0, direction)))
-				return hasEnemyPiece(last2Move);
-		}
-		return false;
-	}
-
 	public Position getTakenPosition(Position target) {
 
 		if (validateTake(target)) {
@@ -56,6 +22,40 @@ public class PawnLogic extends PieceLogic {
 			return null;
 	}
 
+	@Override
+	protected boolean validateMovePosition(Position target){
+		
+		int direction = getMoveDirection();
+		Position delta = target.minus(piece.getPosition());
+		if (delta.getCol() != 0)
+			return false;
+
+		return (delta.getRow() == direction) || ((delta.getRow() == 2 * direction)
+				&& (piece.getPosition().getRow() == getStartRow(piece.getColor())));
+	}
+
+	@Override
+	protected boolean validateTakePosition(Position target){
+
+		int direction = getMoveDirection();
+		Position delta = target.minus(piece.getPosition());
+		return ((delta.getRow() == direction) && (Math.abs(delta.getCol()) == 1));
+	}
+
+	@Override
+	protected boolean hasEnemyPiece(Position target) {
+
+		Position last2Move = board.getLastPawnMove();
+		if (last2Move != null) {
+			Position delta = target.minus(last2Move);
+			if (delta.equals(new Position(0, getMoveDirection())))
+				return super.hasEnemyPiece(last2Move);
+		}
+		
+		return super.hasEnemyPiece(target);
+	}
+
+	
 	private int getMoveDirection() {
 		if (piece.getColor() == Color.White)
 			return 1;

@@ -41,6 +41,7 @@ public class TimerManager extends Component implements GameEventListener, Settin
 		modes.add(new TimerModel(App.Messages.Timers.Blitz5Mode, 5));
 		modes.add(new TimerModel(App.Messages.Timers.Blitz10Mode, 10));
 		modes.add(new TimerModel(App.Messages.Timers.Rapid30Mode, 30));
+		modes.add(new TimerModel(App.Messages.Timers.Standard60Mode, 60));
 	}
 
 	@Override
@@ -92,6 +93,13 @@ public class TimerManager extends Component implements GameEventListener, Settin
 		runTimer();
 	}
 
+	@Override
+	public void rollbackMove(Game game) {
+
+		// TODO Time rollback
+		makeMove(game);
+	}
+	
 	@Override
 	public void endGame(Game game) {
 		mode = null;

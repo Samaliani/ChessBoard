@@ -25,7 +25,7 @@ public class Position {
 		char[] p = pos.toLowerCase().toCharArray();
 		int col = p[0] - 'a';
 		this.col = col;
-		this.row = p[1] - 1;
+		this.row = p[1] - '1';
 	}
 
 	public void set(Position value) {
@@ -42,11 +42,6 @@ public class Position {
 		String result = Character.toString((char) ((int) 'a' + col));
 		result += Character.forDigit(row + 1, 10);
 		return result;
-	}
-
-	public static void parse(String string) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public int getCol() {

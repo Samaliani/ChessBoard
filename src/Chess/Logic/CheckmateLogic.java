@@ -14,6 +14,10 @@ public class CheckmateLogic extends CheckLogic {
 		super(board);
 	}
 
+	public boolean isCheckmate() {
+		return (isCheckmate(Piece.Color.White) || isCheckmate(Piece.Color.Black));
+	}
+
 	public boolean isCheckmate(Color color) {
 		List<Piece> pieces = board.getPieces(color, Type.King);
 		// Only one King
@@ -60,9 +64,9 @@ public class CheckmateLogic extends CheckLogic {
 		}
 		return false;
 	}
-	
-	private boolean canLeave(Piece king){
-		
+
+	private boolean canLeave(Piece king) {
+
 		PieceLogic logic = MainLogic.getPieceLogic(board, king);
 		List<Position> moves = logic.getValidMoves();
 		return moves.size() != 0;

@@ -4,7 +4,7 @@ import Chess.Board;
 import Chess.Piece;
 import Chess.Position;
 
-public class BishopLogic extends CommonPieceLogic {
+public class BishopLogic extends PieceLogic {
 
 	public BishopLogic(Board board, Piece piece) {
 		super(board, piece);

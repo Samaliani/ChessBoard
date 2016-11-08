@@ -4,8 +4,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.TreeSet;
 
 public class SettingManager extends Component implements ManagerExtender {
 
@@ -35,7 +38,7 @@ public class SettingManager extends Component implements ManagerExtender {
 	public void appFinalization() {
 		saveSettings();
 	}
-
+	
 	public void componentAdded(Component component) {
 		if (component instanceof SettingSubscriber)
 			subscribers.add((SettingSubscriber)component);
@@ -65,7 +68,18 @@ public class SettingManager extends Component implements ManagerExtender {
 
 		try {
 			FileWriter writer = new FileWriter(fileName);
-			preferences.store(writer, description);
+			
+			@SuppressWarnings("serial")
+			Properties tmp = new Properties() {
+
+				@Override
+			    public synchronized Enumeration<Object> keys() {
+			        return Collections.enumeration(new TreeSet<Object>(super.keySet()));
+			    }
+			};
+			tmp.putAll(preferences);
+			tmp.store(writer, description);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

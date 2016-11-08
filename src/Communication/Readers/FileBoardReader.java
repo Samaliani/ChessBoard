@@ -61,6 +61,7 @@ public class FileBoardReader extends BoardReader {
 			return new Event(eventType, new BoardData(data));
 		case ButtonWhite:
 		case ButtonBlack:
+		case Rollback:
 			return new Event(eventType);
 		default:
 			return null;
@@ -87,7 +88,9 @@ public class FileBoardReader extends BoardReader {
 	
 	@Override
 	public void disconnect() throws IOException
-	{
+	{		
+		if (reader == null)
+			return;
 		reader.close();
 	}
 }

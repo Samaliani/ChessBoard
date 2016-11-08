@@ -7,7 +7,7 @@ import LowLevel.BoardData;
 public class Event {
 
 	public enum Type {
-		NoEvent, BoardChange, ButtonWhite, ButtonBlack;
+		NoEvent, BoardChange, ButtonWhite, ButtonBlack, Rollback;
 
 		public static Type fromInt(int value) {
 			switch (value) {
@@ -17,6 +17,8 @@ public class Event {
 				return ButtonWhite;
 			case 0xFD:
 				return ButtonBlack;
+			case 0xFC:
+				return Rollback;
 			default:
 				return NoEvent;
 			}
@@ -30,6 +32,8 @@ public class Event {
 				return 0xFE;
 			case ButtonBlack:
 				return 0xFD;
+			case Rollback:
+				return 0xFC;
 			default:
 				return 0;
 			}
@@ -60,5 +64,5 @@ public class Event {
 	public BoardData getData() {
 		return data;
 	}
-	
+
 }

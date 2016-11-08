@@ -55,6 +55,7 @@ public class SerialReader extends BoardReader {
 			return new Event(eventType, new BoardData(data));
 		case ButtonWhite:
 		case ButtonBlack:
+		case Rollback:
 			return new Event(eventType);
 		default:
 			return null;
@@ -71,6 +72,7 @@ public class SerialReader extends BoardReader {
 				value = "0" + value;
 			value += "\n";
 			outStream.write(value.getBytes());
+			outStream.flush();
 		}
 	}
 

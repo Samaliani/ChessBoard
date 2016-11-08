@@ -4,7 +4,7 @@ import Chess.Board;
 import Chess.Piece;
 import Chess.Position;
 
-public class QueenLogic extends CommonPieceLogic {
+public class QueenLogic extends PieceLogic {
 
 	public QueenLogic(Board board, Piece piece) {
 		super(board, piece);

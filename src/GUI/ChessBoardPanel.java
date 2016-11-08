@@ -1,6 +1,7 @@
 package GUI;
 
 import java.awt.*;
+import java.awt.Font;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +27,8 @@ public class ChessBoardPanel extends JPanel {
 	private SVGIcon helper;
 	private Map<String, URI> sprites;
 	private List<ChessBoardPanelExtender> extenders;
+	int cellSize;
+	int boardSize;
 
 	public ChessBoardPanel() {
 
@@ -70,6 +73,39 @@ public class ChessBoardPanel extends JPanel {
 			extender.refresh();
 	}
 
+	int calcWidth;
+	int calcHeight;
+	int fontSize;
+	int symbolHeight;
+	int symbolWidth;
+	
+	int LETTER_SIZE = 4;
+	
+	private void recalculate(int width, int height, Graphics g) {
+
+		calcWidth = width;
+		calcHeight = height;
+
+		cellSize = Math.min(width, height) / 8;
+		boardSize = 8 * cellSize;
+		
+		Font font = g.getFont();
+		fontSize = 120;
+		while (true) {
+
+			Font f = new Font(font.getFontName(), Font.PLAIN, fontSize);
+			FontMetrics metrics = g.getFontMetrics(f);
+			double c = 1.0 / LETTER_SIZE;
+			if (metrics.getAscent() < cellSize * c){
+				symbolHeight = metrics.getAscent();
+				symbolWidth = metrics.stringWidth("i");
+				break;
+			}
+			fontSize--;
+		}
+
+	}
+	
 	private Color getCellColor(int x, int y, Color color) {
 		Color result = color;
 		for (ChessBoardPanelExtender extender : extenders)
@@ -78,23 +114,58 @@ public class ChessBoardPanel extends JPanel {
 		return result;
 	}
 
-	private void drawBoard(Graphics g, int x, int y, int cellSize) {
-
+	
+	private Color getColor(int row, int column){
 		Color black = new Color(181, 136, 99);// (139, 69, 19);//(50, 200, 200);
 		Color white = new Color(240, 217, 181);// (255, 255, 255);
+		
+		if ((row + column) % 2 == 0)
+			return black;
+		else
+			return white;		
+	}
+	
+	private void drawLetters(Graphics g, int x, int y, int cellSize) {
 
-		Color currentColor;
+		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+				RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
+
+		Font font = new Font(g.getFont().getFontName(), Font.PLAIN, fontSize);
+		g.setFont(font);
+		FontMetrics metrics = g.getFontMetrics(font);
+		
+		int left = x + symbolWidth / 2;
+		int top = y + cellSize * 7 + symbolHeight;
+		for (int row = 0; row < 8; row++) {
+			Color color = getColor(1, row);
+			g.setColor(color);
+			String s = Integer.toString(row + 1); 
+			g.drawString(s, left, top - row * cellSize);
+		}
+		
+		left = x + cellSize - symbolWidth / 2;
+		top = y + cellSize * 8 - symbolHeight / 4;
+		for (int column = 0; column < 8; column++) {
+			Color color = getColor(column, 1);
+			g.setColor(color);
+			String s = Character.toString((char)('a' + column)); 
+			g.drawString(s, left - metrics.stringWidth(s) + column * cellSize, top);
+		}
+			
+			
+	}
+	
+	private void drawBoard(Graphics g, int x, int y, int cellSize) {
+
 		for (int i = 0; i < 8; i++)
 			for (int j = 0; j < 8; j++) {
-				if ((i + j) % 2 == 0)
-					currentColor = white;
-				else
-					currentColor = black;
-
+				Color currentColor = getColor(j, 7 - i);
 				currentColor = getCellColor(j, i, currentColor);
 				g.setColor(currentColor);
 				g.fillRect(x + j * cellSize, y + i * cellSize, cellSize, cellSize);
 			}
+		
+		drawLetters(g, x, y, cellSize);
 	}
 
 	private void drawPieces(Graphics g, int x, int y, int cellSize) {
@@ -102,7 +173,7 @@ public class ChessBoardPanel extends JPanel {
 		if (board == null)
 			return;
 
-		int pieceSize = (int) (0.95 * cellSize);
+		int pieceSize = (int) (0.9 * cellSize);
 		int delta = (cellSize - pieceSize) / 2;
 		helper.setPreferredSize(new Dimension(pieceSize, pieceSize));
 
@@ -111,7 +182,7 @@ public class ChessBoardPanel extends JPanel {
 				Piece piece = board.getPiece(new Position(j, 7 - i));
 				if (piece != null) {
 					helper.setSvgURI(sprites.get(getPieceStr(piece)));
-					helper.paintIcon(this, g, x + delta + j * cellSize, y + (i + 1) * cellSize - pieceSize);
+					helper.paintIcon(this, g, x + delta + j * cellSize, y + i * cellSize + cellSize - pieceSize);// + delta);
 				}
 			}
 	}
@@ -140,11 +211,11 @@ public class ChessBoardPanel extends JPanel {
 		final int width = getWidth();
 		final int height = getHeight();
 
+		if ((width != calcWidth) || (height != calcHeight))
+			recalculate(width, height, g);
+		
 		g.setColor(getBackground());
 		g.fillRect(0, 0, width, height);
-
-		int cellSize = Math.min(width, height) / 8;
-		int boardSize = 8 * cellSize;
 
 		int x = (width - boardSize) / 2;
 		int y = (height - boardSize) / 2;

@@ -12,17 +12,22 @@ import Chess.Piece.Color;
 
 public class Game {
 
+	Board startPosition;
 	Board board;
 	List<Move> moves;
 	GameResult result;
+	int moveCount;
 
 	public Game() {
 		board = new Board();
-		board.loadFEN(Board.StartFEN);
 		moves = new ArrayList<Move>();
-		result = GameResult.Unknown;
+		loadFEN(Board.StartFEN);
 	}
 
+	public Board getStartPosition() {
+		return startPosition;
+	}
+	
 	public Board getBoard() {
 		return board;
 	}
@@ -32,22 +37,16 @@ public class Game {
 	}
 
 	public void loadFEN(String fen) {
+		moveCount = 0;
 		moves.clear();
 		result = GameResult.Unknown;
 		board.loadFEN(fen);
+		startPosition = new Board(board);
 	}
 
 	public String saveFEN() {
 		FEN fen = new FEN(board);
 		return fen.save();
-	}
-
-	private Color getActiveColor() {
-		return board.getTurnColor();
-	}
-
-	private Color getInactiveColor() {
-		return board.getTurnColor().inverse();
 	}
 
 	// --------------------------------------
@@ -66,17 +65,59 @@ public class Game {
 	// --------------------------------------
 
 	public int getMoveCount() {
-		return moves.size();
+		return moveCount;
 	}
 
 	public Move getMove(int index) {
 		return moves.get(index);
 	}
 
+	private void addMove(Move move) {
+
+		while (moves.size() > moveCount) {
+			moves.remove(moveCount);
+		}
+
+		moves.add(move);
+		moveCount++;
+	}
+
+	private void pushMove() {
+
+		Move move = moves.get(moveCount);
+		board.apply(move.getBoard());
+		moveCount++;
+
+	}
+
+	private void popMove() {
+
+		moveCount--;
+		Move move = moves.get(moveCount);
+		board.apply(move.rollback());
+	}
+
+	public boolean commitMove() {
+
+		if (moveCount == moves.size())
+			return false;
+		pushMove();
+		return true;
+	}
+ 
+	public boolean rollbackMove() {
+
+		if (moveCount == 0)
+			return false;
+		result = GameResult.Unknown;
+		popMove();
+		return true;
+	}
+
 	public boolean makeMove(Position start, Position finish) {
 
 		Piece piece = board.getPiece(start);
-		if (piece.getColor() != getActiveColor())
+		if (piece.getColor() != getTurnColor())
 			return false;
 
 		Move.Type type;
@@ -90,27 +131,25 @@ public class Game {
 		else
 			return false;
 
-		if (!MainLogic.canMovePiece(board, piece, position))
-			return false;
+		Board before = new Board(board);
 
-		Position ambiguity = getAmbiguity(piece, position, type);
 		if (type == Move.Type.Take)
 			board.removePieceAt(logic.getTakenPosition(position));
-		board.processMove(type, piece, position);
 		piece.move(position);
-
-		Move move = new Move(type, piece.getType(), position, ambiguity);
 
 		if (MainLogic.isPromotion(board, piece, position)) {
 			Piece.Type promoteTo = Piece.Type.Queen;
 			// TODO Add event about promotion
-			move.setPromotion(promoteTo);
 			board.removePiece(piece);
 			Piece promotedPiece = new Piece(promoteTo, piece.getColor(), position);
 			board.addPiece(promotedPiece);
 		}
 
+		Move move = new Move(before, new Board(board));
 		addMove(move);
+
+		processBoard(move, piece, position);
+
 		return true;
 	}
 
@@ -125,7 +164,7 @@ public class Game {
 		if (!cv.validate(type))
 			return false;
 
-		board.processMove(type, king, position);
+		Board before = new Board(board);
 
 		king.move(position);
 		Piece rook;
@@ -142,56 +181,57 @@ public class Game {
 			return false;
 		}
 
-		Move move = new Move(type);
+		Move move = new Move(before, new Board(board));
 		addMove(move);
+
+		processBoard(move, king, position);
+		
 		return true;
 	}
 
-	private Position getAmbiguity(Piece piece, Position target, Move.Type type) {
+	private void processBoard(Move move, Piece piece, Position position) {
 
-		List<Piece> pieces = board.getPieces(piece.getColor(), piece.getType());
-		if (pieces.size() == 1)
-			return null;
+		updateCastlings(piece, move);
+		updateEmptyMove(piece, move);
+		updateLastPawnMove(piece, move);
 
-		List<Piece> ambiguityPieces = new ArrayList<Piece>();
-		for (Piece p : pieces) {
-			PieceLogic logic = MainLogic.getPieceLogic(board, p);
-			switch (type) {
-			case Regular:
-				if (!logic.validateMove(target))
-					continue;
-				break;
-			case Take:
-				if (!logic.validateTake(target))
-					continue;
-				break;
-			default:
-				continue;
-			}
-			ambiguityPieces.add(p);
-		}
-
-		ambiguityPieces.remove(piece);
-		if (ambiguityPieces.size() == 0)
-			return null;
-
-		Position ambiguity = new Position(piece.getPosition().getCol(), target.getRow());
-		for (Piece p : ambiguityPieces)
-			if (p.getPosition().getCol() == piece.getPosition().getCol())
-				ambiguity = new Position(piece.getPosition());
-
-		return ambiguity;
-	}
-
-	private void addMove(Move move) {
-		move.check = MainLogic.isCheck(board, getInactiveColor());
-		if (move.check)
-			move.checkmate = MainLogic.isCheckmate(board, getInactiveColor());
-		moves.add(move);
-
-		if (getActiveColor() == Color.Black)
+		if (getTurnColor() == Color.Black)
 			board.currentMove++;
 		board.turnColor = board.turnColor.inverse();
+	}
+
+	private void updateCastlings(Piece piece, Move move) {
+
+		switch (piece.getType()) {
+		case King:
+			board.setCastlingAvailable(getTurnColor(), Move.Type.CastlingK, false);
+			board.setCastlingAvailable(getTurnColor(), Move.Type.CastlingQ, false);
+			break;
+		case Rook:
+			if (piece.getPosition().getCol() == 7)
+				board.setCastlingAvailable(getTurnColor(), Move.Type.CastlingK, false);
+			if (piece.getPosition().getCol() == 0)
+				board.setCastlingAvailable(getTurnColor(), Move.Type.CastlingQ, false);
+			break;
+		default:
+			// Nothing
+		}
+	}
+
+	private void updateEmptyMove(Piece piece, Move move) {
+		if ((piece.getType() != Piece.Type.Pawn) && (move.type == Move.Type.Regular))
+			board.emptyMoves++;
+		else
+			board.emptyMoves = 0;
+	}
+
+	private void updateLastPawnMove(Piece piece, Move move) {
+		board.lastPawn2Move = null;
+		if ((piece.getType() == Piece.Type.Pawn) && (move.type == Move.Type.Regular)) {
+			Position pos = piece.getPosition().minus(move.startPosition);
+			if (Math.abs(pos.row) == 2)
+				board.lastPawn2Move = piece.getPosition();
+		}
 	}
 
 	private Move.Type getCastlingType(Piece piece, Position position) {

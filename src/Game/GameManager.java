@@ -20,8 +20,7 @@ import Core.Component;
 import Core.EventManager;
 import Core.EventProvider;
 
-public class GameManager extends Component implements EventProvider,
-		CommunicationListener {
+public class GameManager extends Component implements EventProvider, CommunicationListener {
 
 	enum State {
 		Start, Wait, End, Invalid
@@ -29,7 +28,7 @@ public class GameManager extends Component implements EventProvider,
 
 	public static final String GameManagerId = "game";
 
-	Game game;		
+	Game game;
 
 	// Currents
 	State currentState;
@@ -50,7 +49,7 @@ public class GameManager extends Component implements EventProvider,
 
 	private void reset() {
 		currentState = State.Start;
-		game.loadFEN(Board.StartFEN);		
+		game.loadFEN(Board.StartFEN);
 		sendBoardEvent(OutEvent.Type.RequestBoard);
 		resetTurn();
 	}
@@ -100,29 +99,35 @@ public class GameManager extends Component implements EventProvider,
 	}
 
 	public Board getBoard() {
-		return game.getBoard();
+
+		if (game != null)
+			return game.getBoard();
+		else
+			return new Board();		
 	}
 
 	public void loadFEN(String data) {
 		reset();
 		game.loadFEN(data);
-		
+
 	}
 
 	public String saveFEN() {
 		return game.saveFEN();
 	}
-	
-	public void finishGame(GameResult result)
-	{
+
+	public void finishGame(GameResult result) {
+
+		if (currentState == State.End)
+			return;
+		
 		game.setResult(result);
 		doEndGame();
 		currentState = State.End;
 	}
-	
+
 	private List<EventListener> getListeners() {
-		EventManager eventManager = (EventManager) getManager().getComponent(
-				EventManager.EventManagerId);
+		EventManager eventManager = (EventManager) getManager().getComponent(EventManager.EventManagerId);
 		return eventManager.getListeners(getId());
 	}
 
@@ -143,6 +148,12 @@ public class GameManager extends Component implements EventProvider,
 		sendBoardEvent(OutEvent.Type.MoveSignal);
 		for (EventListener listener : getListeners())
 			((GameEventListener) listener).makeMove(game);
+	}
+	
+	private void doRollbackMove() {
+		sendBoardEvent(OutEvent.Type.MoveSignal);
+		for (EventListener listener : getListeners())
+			((GameEventListener) listener).rollbackMove(game);
 	}
 
 	private void doEndGame() {
@@ -197,16 +208,14 @@ public class GameManager extends Component implements EventProvider,
 
 		switch (event.getType()) {
 		case ButtonWhite:
-			if ((game.getTurnColor() != Piece.Color.White)
-					&& (lastData.equals(Utils.getBoardData(getBoard())))) {
+			if ((game.getTurnColor() != Piece.Color.White) && (lastData.equals(Utils.getBoardData(getBoard())))) {
 				sendBoardEvent(OutEvent.Type.MoveSignal);
 				doStartGame();
 				currentState = State.Wait;
 			}
 			break;
 		case ButtonBlack:
-			if ((game.getTurnColor() != Piece.Color.Black)
-					&& (lastData.equals(Utils.getBoardData(getBoard())))) {
+			if ((game.getTurnColor() != Piece.Color.Black) && (lastData.equals(Utils.getBoardData(getBoard())))) {
 				sendBoardEvent(OutEvent.Type.MoveSignal);
 				doStartGame();
 				currentState = State.Wait;
@@ -216,6 +225,8 @@ public class GameManager extends Component implements EventProvider,
 			lastData = event.getData();
 			if (lastData.equals(Utils.getBoardData(getBoard())))
 				doBeforeGame();
+			break;
+		case Rollback:
 			break;
 		default:
 			assert false;
@@ -231,6 +242,9 @@ public class GameManager extends Component implements EventProvider,
 		case ButtonBlack:
 			currentState = processMove(Piece.Color.Black);
 			break;
+		case Rollback:
+			processRollback();
+			break;
 		case BoardChange:
 			currentState = processBoardChange(event.getData());
 			break;
@@ -241,7 +255,7 @@ public class GameManager extends Component implements EventProvider,
 
 	private State processMove(Piece.Color color) {
 
-		if (game.getTurnColor() != color){
+		if (game.getTurnColor() != color) {
 			sendBoardEvent(OutEvent.Type.ErrorSignal);
 			return State.Wait;
 		}
@@ -261,28 +275,22 @@ public class GameManager extends Component implements EventProvider,
 				setKingRank(disappeared, (byte) (disRank & 0x08));
 				int appRank = getKingRank(appeared);
 				setKingRank(appeared, (byte) (appRank & 0x22));
-				success = makeCastling(Utils.getPiecePosition(disappeared),
-						Utils.getPiecePosition(appeared));
+				success = makeCastling(Utils.getPiecePosition(disappeared), Utils.getPiecePosition(appeared));
 			} else
 				// Regular
-				success = makeMove(Utils.getPiecePosition(disappeared),
-						Utils.getPiecePosition(appeared));
+				success = makeMove(Utils.getPiecePosition(disappeared), Utils.getPiecePosition(appeared));
 		}
 		// Take
 		else if ((delta == 1) && (inactivePos != -1)) {
 
 			// Regular take
 			if (appeared.getPieceCount() == 0)
-				success = makeMove(Utils.getPiecePosition(disappeared),
-						inactivePos);
+				success = makeMove(Utils.getPiecePosition(disappeared), inactivePos);
 			// An passant
 			else {
-				BoardData disActive = BoardData.intersect(getActiveData(),
-						disappeared);
-				if ((disActive.getPieceCount() == 1)
-						&& (appeared.getPieceCount() == 1))
-					success = makeMove(Utils.getPiecePosition(disActive),
-							Utils.getPiecePosition(appeared));
+				BoardData disActive = BoardData.intersect(getActiveData(), disappeared);
+				if ((disActive.getPieceCount() == 1) && (appeared.getPieceCount() == 1))
+					success = makeMove(Utils.getPiecePosition(disActive), Utils.getPiecePosition(appeared));
 			}
 		}
 
@@ -298,14 +306,30 @@ public class GameManager extends Component implements EventProvider,
 		return currentState;
 	}
 
+	private void processRollback() {
+
+		if (!game.rollbackMove()){
+			sendBoardEvent(OutEvent.Type.ErrorSignal);
+			return;
+		}
+
+		resetTurn();
+		sendBoardEvent(OutEvent.Type.RequestBoard);
+		doRollbackMove();
+	}
+
 	private void processInvalid(Event event) {
 
 		// Wait for previous move or initial state
-		if ((event.getType() == Event.Type.ButtonWhite)
-				|| (event.getType() == Event.Type.ButtonBlack))
+		switch (event.getType()) {
+		case ButtonWhite:
+		case ButtonBlack:
 			sendBoardEvent(OutEvent.Type.ErrorSignal);
-		else if (event.getType() == Event.Type.BoardChange) {
-
+			break;
+		case Rollback:
+			processRollback();
+			break;
+		case BoardChange:
 			BoardData data = event.getData();
 
 			currentState = processBoardChange(data);
@@ -314,15 +338,18 @@ public class GameManager extends Component implements EventProvider,
 
 			if (data.equals(BoardData.initialData)) {
 				finishGame(GameResult.Unknown);
+				processEvent(event);
 			}
+			break;
+		default:
+			assert false;
 		}
 	}
 
 	private void processEnd(Event event) {
 
 		// Wait for previous move or initial state
-		if ((event.getType() == Event.Type.ButtonWhite)
-				|| (event.getType() == Event.Type.ButtonBlack))
+		if ((event.getType() == Event.Type.ButtonWhite) || (event.getType() == Event.Type.ButtonBlack))
 			sendBoardEvent(OutEvent.Type.ErrorSignal);
 		else if (event.getType() == Event.Type.BoardChange) {
 
@@ -358,8 +385,7 @@ public class GameManager extends Component implements EventProvider,
 			activePos = Utils.getPiecePosition(disActive);
 		}
 
-		BoardData disInactive = BoardData.intersect(getInactiveData(),
-				dissapeared);
+		BoardData disInactive = BoardData.intersect(getInactiveData(), dissapeared);
 		if (disInactive.getPieceCount() > 1)
 			return State.Invalid;
 		else if (disInactive.getPieceCount() == 1) {

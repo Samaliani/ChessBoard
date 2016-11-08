@@ -17,11 +17,40 @@ public class PieceLogic extends BaseLogic {
 	}
 
 	public boolean validateMove(Position target) {
-		return false;
+
+		if (hasAnyPiece(target))
+			return false;
+
+		if (!validateMovePosition(target))
+			return false;
+
+		if (!checkLine(piece.getPosition(), target, false))
+			return false;
+
+		if (isPinned(target))
+			return false;
+
+		return true;
 	}
 
 	public boolean validateTake(Position target) {
-		return false;
+
+		if (!hasEnemyPiece(target))
+			return false;
+
+		if (hasTeamPiece(target))
+			return false;
+
+		if (!validateTakePosition(target))
+			return false;
+
+		if (!checkLine(piece.getPosition(), target, true))
+			return false;
+
+		if(isPinned(target))
+			return false;
+		
+		return true;
 	}
 
 	public List<Position> getValidMoves() {
@@ -29,21 +58,17 @@ public class PieceLogic extends BaseLogic {
 		for (int col = 0; col < 8; col++)
 			for (int row = 0; row < 8; row++) {
 				Position p = new Position(col, row);
-				if (p.equals(piece.getPosition()))
-					continue;
 				if (validateMove(p))
 					result.add(p);
 			}
 		return result;
 	}
-	
-	public List<Position> getValidTakes(){
+
+	public List<Position> getValidTakes() {
 		List<Position> result = new ArrayList<Position>();
 		for (int col = 0; col < 8; col++)
 			for (int row = 0; row < 8; row++) {
 				Position p = new Position(col, row);
-				if (p.equals(piece.getPosition()))
-					continue;
 				if (validateTake(p))
 					result.add(p);
 			}
@@ -51,12 +76,57 @@ public class PieceLogic extends BaseLogic {
 	}
 
 	public Position getTakenPosition(Position target) {
-		return null;
+		if(validateTake(target))
+			return target;
+		else
+			return null;
+	}
+	
+	protected boolean validateMovePosition(Position target){
+		return validatePosition(target);
+	}
+	
+	protected boolean validateTakePosition(Position target){
+		return validatePosition(target);
 	}
 
+	protected boolean validatePosition(Position target) {
+		return false;
+	}
+
+	protected boolean isPinned(Position target) {
+
+		Position pos = piece.getPosition();
+
+		Piece removedPiece = board.getPiece(target);
+		if (removedPiece != null)
+			removedPiece.move(new Position());
+
+		piece.move(target);
+
+		CheckLogic logic = new CheckLogic(board);
+		boolean isCheck = logic.isCheck(piece.getColor());
+
+		piece.move(pos);
+		if (removedPiece != null)
+			removedPiece.move(target);
+
+		return isCheck;
+	}
+	
 	protected boolean hasEnemyPiece(Position target) {
 		Piece targetPiece = board.getPiece(target);
 		return (targetPiece != null) && (targetPiece.getColor() != piece.getColor());
+	}
+	
+	protected boolean hasTeamPiece(Position target) {
+		Piece targetPiece = board.getPiece(target);
+		return (targetPiece != null) && (targetPiece.getColor() == piece.getColor());
+	}
+
+	protected boolean hasAnyPiece(Position target) {
+		Piece targetPiece = board.getPiece(target);
+		return (targetPiece != null);
 	}
 
 	protected boolean isSameLine(Position p1, Position p2) {

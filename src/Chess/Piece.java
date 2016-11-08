@@ -29,8 +29,8 @@ public class Piece {
 			}
 		}
 
-		public Color inverse(){
-			if (this== White)
+		public Color inverse() {
+			if (this == White)
 				return Black;
 			else
 				return White;
@@ -88,6 +88,12 @@ public class Piece {
 	Color color;
 	Position position;
 
+	public Piece(Piece piece) {
+		type = piece.type;
+		color = piece.color;
+		position = piece.position;
+	}
+
 	public Piece(Type type, Color color) {
 		this.type = type;
 		this.color = color;
@@ -100,6 +106,14 @@ public class Piece {
 		this.position = position;
 	}
 
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		
+		Piece p = (Piece) obj;
+		return (p.type == type) && (p.color == color) && (p.position.equals(position));
+	}
+	
 	public String toString() {
 		return String.format("%s %s %s", color.toString(), type.toString(), position.toString());
 	}

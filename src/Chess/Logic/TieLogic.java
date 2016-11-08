@@ -19,6 +19,8 @@ public class TieLogic extends CheckLogic {
 			PieceLogic logic = MainLogic.getPieceLogic(board, piece);
 			if (logic.getValidMoves().size() != 0)
 				return false;
+			if (logic.getValidTakes().size() != 0)
+				return false;
 		}
 		return true;
 	}

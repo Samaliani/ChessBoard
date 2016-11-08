@@ -49,7 +49,7 @@ public class OpenningBase {
 		if (!directory.exists())
 			return;
 
-		Iterator<File> files = FileUtils.iterateFiles(directory, extensions, false);
+		Iterator<File> files = FileUtils.iterateFiles(directory, extensions, true);
 		while (files.hasNext()) {
 			try {
 				loadFromFile(historyList, files.next());
@@ -77,42 +77,6 @@ public class OpenningBase {
 				loading = false;
 			}
 		}
-	}
-
-	private List<Move> extractMoves(Move move) {
-		List<Move> result = new ArrayList<Move>();
-		result.add(move);
-		return result;
-	}
-
-	private List<Move> extractMoves(ContinuationList list) {
-		List<Move> result = new ArrayList<Move>();
-		for (int i = 0; i < list.size(); i++)
-			result.add(list.get(i));
-		return result;
-	}
-
-	public List<Move> getContinuation(Move move, Move baseMove) {
-
-		if (move == null)
-			return extractMoves(baseMove);
-
-		if (!move.equals(baseMove))
-			return new ArrayList<Move>();
-		
-		ContinuationList result = baseMove.getContinuationList();
-
-		Move nextMove = move.getNext();
-		if (nextMove == null)
-			return extractMoves(result);
-
-		ContinuationList list = result;
-		for (int i = 0; i < list.size(); i++) {
-			List<Move> currentList = getContinuation(nextMove, list.get(i));
-			if (currentList.size() != 0)
-				return currentList;
-		}
-		return new ArrayList<Move>();
 	}
 
 	public boolean compareMove(Move move, Move baseMove) {
@@ -158,12 +122,92 @@ public class OpenningBase {
 		return false;
 	}
 
-	public List<Move> getNextMoves(Game game) {
-
+	private List<Move> extractMoves(Move move) {
 		List<Move> result = new ArrayList<Move>();
+		result.add(move);
+		return result;
+	}
+
+	private List<Move> extractMoves(ContinuationList list) {
+		List<Move> result = new ArrayList<Move>();
+		for (int i = 0; i < list.size(); i++)
+			result.add(list.get(i));
+		return result;
+	}
+
+	private Move getCurrentMove(Move move, Move baseMove) {
+
+		if (move == null)
+			return null;
+
+		if (!move.equals(baseMove))
+			return null;
+
+		Move nextMove = move.getNext();
+		if (nextMove == null)
+			return baseMove;
+
+		ContinuationList list = baseMove.getContinuationList();
+		for (int i = 0; i < list.size(); i++) {
+			Move current = getCurrentMove(nextMove, list.get(i));
+			if (current != null)
+				return current;
+		}
+		return null;
+	}
+
+	private List<Move> getContinuation(Move move, Move baseMove) {
+
+		if (move == null)
+			return extractMoves(baseMove);
+
+		if (!move.equals(baseMove))
+			return null;
+
+		ContinuationList result = baseMove.getContinuationList();
+		Move nextMove = move.getNext();
+		if (move.getHistory().getCurrentMove() == move)
+			// if (nextMove == null)
+			return extractMoves(result);
+
+		ContinuationList list = result;
+		for (int i = 0; i < list.size(); i++) {
+			List<Move> currentList = getContinuation(nextMove, list.get(i));
+			if ((currentList != null) && (currentList.size() != 0))
+				return currentList;
+		}
+		return null;
+	}
+
+	public String getComment(Game game) {
 
 		if (game == null)
-			return result;
+			return "";
+		if (base == null)
+			loadOpenningBase();
+
+		if (base.size() == 0)
+			return "";
+
+		for (History history : base) {
+			Move currentMove = getCurrentMove(game.getHistory().getFirst(), history.getFirst());
+			if (currentMove != null)
+				if (currentMove.getAnnotation() != null) {
+					String comment = currentMove.getAnnotation().getComment();
+					if (comment != "")
+						return comment;
+				}
+		}
+
+		return "";
+	}
+
+	public List<Move> getNextMoves(Game game) {
+
+		List<Move> result = null;
+
+		if (game == null)
+			return new ArrayList<Move>();
 		if (base == null)
 			loadOpenningBase();
 
@@ -171,7 +215,15 @@ public class OpenningBase {
 			return result;
 
 		for (History history : base) {
-			result.addAll(getContinuation(game.getHistory().getFirst(), history.getFirst()));
+			ContinuationList firstMoves = history.getFirstAll();
+			for (int i = 0; i < firstMoves.size(); i++) {
+				List<Move> continuation = getContinuation(game.getHistory().getFirst(), firstMoves.get(i));
+				if (continuation != null) {
+					if (result == null)
+						result = new ArrayList<Move>();
+					result.addAll(continuation);
+				}
+			}
 		}
 		return result;
 	}

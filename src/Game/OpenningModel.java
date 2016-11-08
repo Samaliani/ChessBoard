@@ -1,5 +1,6 @@
 package Game;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -9,25 +10,42 @@ import Chess.GameResult;
 import Chess.Move;
 import Chess.Piece;
 import Chess.Position;
+import Comment.CommentManager;
+import Communication.OutEvent;
 import Core.Manager;
 import GUI.ChessBoardPanel;
 import LowLevel.BoardData;
 import LowLevel.Utils;
-import ictk.boardgame.AmbiguousMoveException;
-import ictk.boardgame.IllegalMoveException;
-import ictk.boardgame.chess.AmbiguousChessMoveException;
-import ictk.boardgame.chess.ChessBoard;
 import ictk.boardgame.chess.ChessGame;
 import ictk.boardgame.chess.ChessMove;
-import ictk.boardgame.chess.io.SAN;
 
 public class OpenningModel extends GameModel {
 
 	public enum Mode {
-		Normal, WhiteTrainer, BlackTrainer;
+		Normal(0), ForWhite(1), ForBlack(2), ForAll(3);
+		private final int value;
+
+		private Mode(final int value) {
+			this.value = value;
+		}
+
+		public static Mode valueOf(int value) {
+			for (Mode mode : Mode.values()) {
+				if (mode.getValue() == value)
+					return mode;
+			}
+			return Normal;
+		}
+
+		public int getValue() {
+			return value;
+		}
 	}
-	
+
 	Mode mode;
+	int hintModeStart;
+	boolean readComments;
+	boolean finishOnBadMove;
 	String path;
 	OpenningBase opennings;
 
@@ -43,6 +61,33 @@ public class OpenningModel extends GameModel {
 	@Override
 	public String getId() {
 		return id;
+	}
+
+	public int getModeCount() {
+		return 4;
+	}
+
+	public String getModeName(int i) {
+		switch (i) {
+		case (0):
+			return App.Messages.Game.OpenningModeNormal;
+		case (1):
+			return App.Messages.Game.OpenningModeHintForWhite;
+		case (2):
+			return App.Messages.Game.OpenningModeHintForBlack;
+		case (3):
+			return App.Messages.Game.OpenningModeHintForAll;
+		default:
+			return "";
+		}
+	}
+
+	public int getActiveMode() {
+		return mode.getValue();
+	}
+
+	public void setActiveMode(int value) {
+		mode = Mode.valueOf(value);
 	}
 
 	@Override
@@ -62,23 +107,27 @@ public class OpenningModel extends GameModel {
 
 	@Override
 	public void unselected() {
-		
+
 		getBoardPanel().removeExtender(boardExtender);
 	}
-	
-	public void setMode(Mode mode){
+
+	public void setMode(Mode mode) {
 		this.mode = mode;
 	}
 
 	@Override
 	public void loadSettings(Properties preferences) {
-		opennings = new OpenningBase(preferences.getProperty("Openning.Path", ".\\data\\opennings\\"));
-		mode = Mode.valueOf(preferences.getProperty("Openning.Mode", Mode.Normal.toString()));
+		opennings = new OpenningBase(preferences.getProperty("Openning.Path", ".\\opennings\\"));
+		mode = Mode.valueOf(
+				Integer.parseInt(preferences.getProperty("Openning.Mode", Integer.toString(Mode.Normal.getValue()))));
+		hintModeStart = Integer.parseInt(preferences.getProperty("Openning.HintModeStart", "5"));
+		readComments = Boolean.parseBoolean(preferences.getProperty("Openning.ReadComments", "false"));
+		finishOnBadMove = Boolean.parseBoolean(preferences.getProperty("Openning.FinishOnMiss", "true"));
 	}
-	
+
 	@Override
 	public void saveSettings(Properties preferences) {
-		preferences.setProperty("Openning.Mode", mode.toString());
+		preferences.setProperty("Openning.Mode", Integer.toString(mode.getValue()));
 	}
 
 	@Override
@@ -91,50 +140,90 @@ public class OpenningModel extends GameModel {
 	@Override
 	public void makeMove(Game game) {
 
+		super.makeMove(game);
+
 		addMove(game);
 		// Check move
-		if (!opennings.checkGame(currentGame))
-			getGameManager().finishGame(GameResult.winColor(game.getTurnColor()));
-		else
+		if (!opennings.checkGame(currentGame)) {
+			if (finishOnBadMove)
+				getGameManager().finishGame(GameResult.winColor(game.getTurnColor()));
+			else
+				getCommunicationManager().sendEvent(new OutEvent(OutEvent.Type.SadSignal));
+		} else
 			super.makeMove(game);
 
 		processMode(game);
 	}
 
 	@Override
+	public void rollbackMove(Game game) {
+
+		super.rollbackMove(game);
+		removeMove(game);
+		processMode(game);
+	}
+
+	@Override
 	public void endGame(Game game) {
-		currentGame = null;
+		// currentGame = null;
 	}
 
 	private ChessBoardPanel getBoardPanel() {
 		return ((ChessBoardManager) manager).getFrame().boardPanel;
 	}
 
-	private void processMode(Game game){
+	private void processMode(Game game) {
 
 		boardExtender.setData(null);
-		switch(mode){
-		case WhiteTrainer:
-			if (game.getBoard().getTurnColor() == Piece.Color.White) {
-				BoardData data = getNextMoves();
-				boardExtender.setData(data);
-			}
-			break;
-		case BlackTrainer:
-			if (game.getBoard().getTurnColor() == Piece.Color.Black) {
-				BoardData data = getNextMoves();
-				boardExtender.setData(data);
-			}
-			break;
+		if (mode == Mode.Normal)
+			return;
+
+		if (game.getBoard().getCurrentMove() < hintModeStart)
+			return;
+
+		String comments = getComment();
+		if (comments.length() > 0)
+			comments += System.lineSeparator();
+		
+		BoardData data = getNextMoves();
+		List<String> options = getNextMovesText();
+		for (int i = 0; i < options.size(); i++)
+			comments += Integer.toString(i + 1) + " - " + options.get(i) + System.lineSeparator();
+
+		switch (mode) {
+		case ForWhite:
+			if (game.getBoard().getTurnColor() != Piece.Color.White)
+				return;
+		case ForBlack:
+			if (game.getBoard().getTurnColor() != Piece.Color.Black)
+				return;
 		default:
 		}
+
+		boardExtender.setData(data);
+		getCommentManager().addComment(comments);
 	}
-	
+
+	private CommentManager getCommentManager() {
+		return (CommentManager) manager.getComponent(CommentManager.CommentManagerId);
+	}
+
+	private String getComment() {
+		if (readComments)
+			return opennings.getComment(currentGame);
+		else
+			return "";
+	}
+
 	private BoardData getNextMoves() {
 
 		List<ictk.boardgame.Move> continuation = opennings.getNextMoves(currentGame);
-		
+
 		BoardData data = new BoardData();
+
+		if (continuation == null)
+			return data;
+
 		for (ictk.boardgame.Move move : continuation) {
 			ChessMove chessMove = (ChessMove) move;
 			data.plus(Utils.getBoardData(
@@ -143,20 +232,32 @@ public class OpenningModel extends GameModel {
 		return data;
 	}
 
-	private ChessMove copyMove(ChessBoard board, Move move) throws AmbiguousChessMoveException, IllegalMoveException {
-		SAN san = new SAN();
-		return (ChessMove) san.stringToMove(board, move.toString());
+	private List<String> getNextMovesText() {
+
+		List<String> result = new ArrayList<String>();
+
+		List<ictk.boardgame.Move> continuation = opennings.getNextMoves(currentGame);
+		if (continuation == null)
+			return result;
+
+		for (ictk.boardgame.Move move : continuation) {
+			ChessMove chessMove = (ChessMove) move;
+
+			String moveText = ictkUtils.moveToString(chessMove);
+			if (!result.contains(moveText))
+				result.add(moveText);
+		}
+		return result;
 	}
 
 	private void addMove(Game game) {
 		Move lastMove = game.getMove(game.getMoveCount() - 1);
+		ictkUtils.addMove(currentGame, lastMove);
+	}
 
-		try {
-			ChessMove move = copyMove((ChessBoard) currentGame.getBoard(), lastMove);
-			currentGame.getHistory().add(move);
-		} catch (IllegalMoveException | AmbiguousMoveException e) {
-			e.printStackTrace();
-		}
+	private void removeMove(Game game) {
+		currentGame.getHistory().prev();
+		//currentGame.getHistory().getContinuationList().removeAll();
 	}
 
 }

@@ -1,10 +1,12 @@
 package App;
 
+import Comment.CommentManager;
 import Communication.CommunicationManager;
 import Core.EventManager;
 import Core.Manager;
 import Core.SettingManager;
 import Debug.Debugger;
+import Engine.ChessEngineManager;
 import GUI.ChessBoardMain;
 import Game.GameArchive;
 import Game.GameManager;
@@ -38,6 +40,7 @@ public class ChessBoardManager extends Manager {
 		addComponent(new GameManager(this));
 		addComponent(new GameModelManager(this));
 		addComponent(new TimerManager(this));
+		addComponent(new CommentManager(this));
 		
 		// Frame
 		frame = new ChessBoardMain(this);
@@ -45,6 +48,9 @@ public class ChessBoardManager extends Manager {
 		// Debug & Archive 
 		addComponent(new Debugger(this, frame));
 		addComponent(new GameArchive(this));
+		
+		// Engine
+		addComponent(new ChessEngineManager(this));
 	}
 
 	@Override

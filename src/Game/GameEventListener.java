@@ -9,5 +9,6 @@ public interface GameEventListener extends EventListener {
 	void beforeGame(Game game);
 	void startGame(Game game);
 	void makeMove(Game game);
+	void rollbackMove(Game game);
 	void endGame(Game game);
 }

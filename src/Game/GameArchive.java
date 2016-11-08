@@ -6,13 +6,18 @@ import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Properties;
 
 import Chess.Game;
-import Chess.PGN.PGN;
 import Core.Component;
 import Core.Manager;
 import Core.SettingSubscriber;
+
+import ictk.boardgame.chess.ChessGame;
+import ictk.boardgame.chess.ChessGameInfo;
+import ictk.boardgame.chess.io.PGNWriter;
+
 
 public class GameArchive extends Component implements SettingSubscriber, GameEventListener {
 
@@ -49,6 +54,12 @@ public class GameArchive extends Component implements SettingSubscriber, GameEve
 	}
 
 	@Override
+	public void rollbackMove(Game game) {
+		if (archive&&needStoreGame())
+			storeGame(game);
+	}
+
+	@Override
 	public void endGame(Game game) {
 		if (archive&&needStoreGame())
 			storeGame(game);
@@ -59,7 +70,7 @@ public class GameArchive extends Component implements SettingSubscriber, GameEve
 		//return (modelManager.getCurrentModel().getId() == GameModel.id);
 		return true;
 	}
-
+	
 	public void storeGame(Game game) {
 
 		int n = game.getMoveCount();
@@ -69,9 +80,16 @@ public class GameArchive extends Component implements SettingSubscriber, GameEve
 		new File(path).mkdirs();
 		try {
 			FileWriter writer = new FileWriter(fileName);
-			PGN pgn = new PGN(game);
-			writer.write(pgn.exportMovesLine());
-			writer.close();
+			ChessGame chessGame = ictkUtils.copyGame(game);
+
+			ChessGameInfo gameInfo = new ChessGameInfo();
+			gameInfo.setDate(new GregorianCalendar());
+			chessGame.setGameInfo(gameInfo);
+			
+			PGNWriter writerPGN = new PGNWriter(writer);
+
+			writerPGN.writeGame(chessGame);
+			writerPGN.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

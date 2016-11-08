@@ -15,6 +15,10 @@ public class CheckLogic extends BaseLogic {
 		super(board);
 	}
 
+	public boolean isCheck() {
+		return (isCheck(Piece.Color.White) || isCheck(Piece.Color.Black));
+	}
+
 	public boolean isCheck(Color color) {
 
 		return isCheck(getKing(color));

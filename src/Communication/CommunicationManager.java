@@ -147,6 +147,7 @@ public class CommunicationManager extends Component implements Runnable,
 				reader.connect();
 			} catch (IOException e) {
 				e.printStackTrace();
+				readerDisconnect(false);
 			}
 		} else 
 			changePort(portName);

@@ -1,9 +1,13 @@
 package Chess.PGN;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+import Chess.Board;
 import Chess.Game;
 import Chess.Move;
+import Chess.Piece;
 
 public class PGN {
 
@@ -43,11 +47,20 @@ public class PGN {
 	}
 	
 	public String exportMoves() {
-		String result = "";
-		int moveNo = 1;
+		
+		Board startPos = game.getStartPosition();
 
-		for (int i = 0; i < game.getMoveCount(); i++) {
-			Move move = game.getMove(i);
+		List<Move> moves = new ArrayList<Move>();
+		if (startPos.getTurnColor() == Piece.Color.Black)
+			moves.add(new Move(Move.Type.Unknown));
+		for(int i = 0; i < game.getMoveCount(); i++)
+			moves.add(game.getMove(i));
+
+		
+		String result = "";
+		int moveNo = startPos.getCurrentMove();
+		for (int i = 0; i < moves.size(); i++) {
+			Move move = moves.get(i);
 			if (i % 2 == 0)
 				result += String.format("%d.%s ", moveNo, move.toString());
 			else {

@@ -7,11 +7,11 @@ import LowLevel.BoardData;
 
 public class OpenningBoardExtender extends ChessBoardPanelExtender {
 
-	//Manager manager;
+	// Manager manager;
 	BoardData data;
 
 	public OpenningBoardExtender() {
-		//this.manager = manager;
+		// this.manager = manager;
 	}
 
 	public boolean needProcessSquare(int x, int y) {
@@ -20,15 +20,22 @@ public class OpenningBoardExtender extends ChessBoardPanelExtender {
 		return (((data.getData()[7 - y]) & (1 << (7 - x))) != 0);
 	}
 
-	@Override
-	public Color getColor(Color color) {
-
-		double alpha = 0.95;
+	private double getColorBrightness(Color color) {
 		float[] rgb = new float[3];
 		rgb = color.getRGBColorComponents(rgb);
 
-		double maskAlpha = 0.05;
-		float[] mask = { 0, 0, (float) 0.75 };
+		return 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+	}
+
+	@Override
+	public Color getColor(Color color) {
+
+		double alpha = 0.5;
+		float[] rgb = new float[3];
+		rgb = color.getRGBColorComponents(rgb);
+
+		double maskAlpha = 0.1;
+		float[] mask = { (float) (0.5 * getColorBrightness(color)), 0, 0 };
 
 		for (int i = 0; i < 3; i++) {
 			double value = rgb[i] * alpha * (1 - maskAlpha + mask[i] * alpha)
@@ -41,14 +48,9 @@ public class OpenningBoardExtender extends ChessBoardPanelExtender {
 		return new Color(rgb[0], rgb[1], rgb[2]);
 	}
 
-	@Override
-	public void refresh() {
-	}
-
 	public void setData(BoardData data) {
 		this.data = data;
 		update();
 	}
-
 
 }

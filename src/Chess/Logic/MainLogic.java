@@ -26,7 +26,7 @@ public class MainLogic {
 		}
 	}
 
-	static public boolean canMovePiece(Board board, Piece piece, Position target) {
+	static public boolean canMovePiece2(Board board, Piece piece, Position target) {
 		Position pos = piece.getPosition();
 
 		Piece removedPiece = board.getPiece(target);
@@ -49,10 +49,10 @@ public class MainLogic {
 		return logic.isCheck(color);
 	}
 
-	static public boolean isCheckmate(Board board, Color color) {
+	static public boolean isCheckmate(Board board) {
 
 		CheckmateLogic logic = new CheckmateLogic(board);
-		return logic.isCheckmate(color);
+		return logic.isCheckmate();
 	}
 	
 	static public boolean isTie(Board board, Color color){

@@ -48,8 +48,10 @@ public class FEN {
 				emptyCells++;
 				continue;
 			}
-			if (emptyCells != 0)
+			if (emptyCells != 0) {
 				result += Integer.toString(emptyCells);
+				emptyCells = 0;
+			}
 
 			char c = piece.getType().toChar(true).charAt(0);
 			if (piece.getColor() == Color.Black)

@@ -22,7 +22,7 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 	boolean visualDebug;
 
 	DebugOutput debugOutput;
-	DebugBoardExtender boardExtender; 
+	DebugBoardExtender boardExtender;
 
 	public Debugger(Manager manager, ChessBoardMain frame) {
 		super(manager);
@@ -63,10 +63,10 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 	}
 
 	@Override
-	public void beforeGame(Game game){
+	public void beforeGame(Game game) {
 		boardExtender.refresh();
 	}
-	
+
 	@Override
 	public void startGame(Game game) {
 		if (dataDebug) {
@@ -76,6 +76,10 @@ public class Debugger extends Component implements SettingSubscriber, GameEventL
 
 	@Override
 	public void makeMove(Game game) {
+	}
+
+	@Override
+	public void rollbackMove(Game game) {
 	}
 
 	@Override

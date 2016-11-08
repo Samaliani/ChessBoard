@@ -19,14 +19,15 @@ public class DebugBoardExtender extends ChessBoardPanelExtender {
 	}
 
 	public boolean needProcessSquare(int x, int y) {
-		return ((boardData.getData()[7 - y]) & (1 << (7 - x))) != ((eventData.getData()[7 - y])
-				& (1 << (7 - x)));
+		if (eventData == null)
+			return false;		
+		return ((boardData.getData()[7 - y]) & (1 << (7 - x))) != ((eventData.getData()[7 - y]) & (1 << (7 - x)));
 	}
 
 	@Override
 	public Color getColor(Color color) {
 
-		double alpha = 0.95;
+		double alpha = 0.5;
 		float[] rgb = new float[3];
 		rgb = color.getRGBColorComponents(rgb);
 
@@ -48,7 +49,7 @@ public class DebugBoardExtender extends ChessBoardPanelExtender {
 	public void refresh() {
 		super.refresh();
 		GameManager gameManager = (GameManager) manager.getComponent(GameManager.GameManagerId);
-		boardData = Utils.getBoardData(gameManager.getBoard());
+		boardData = Utils.getBoardData(gameManager.getBoard());                                           
 	}
 
 	public void setEventData(BoardData data) {

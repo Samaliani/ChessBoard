@@ -3,7 +3,7 @@ package Communication;
 public class OutEvent {
 
 	public enum Type {
-		NoEvent, RequestBoard, MoveSignal, ErrorSignal, FinalSignal, PositionSignal, NoErrorSignal;
+		NoEvent, RequestBoard, MoveSignal, ErrorSignal, FinalSignal, PositionSignal, NoErrorSignal, SadSignal;
 
 		public static int toInt(Type value) {
 			switch (value) {
@@ -19,6 +19,8 @@ public class OutEvent {
 				return 0x0B;
 			case NoErrorSignal:
 				return 0x0A;
+			case SadSignal:
+				return 0x09;
 			default:
 				return 0;
 			}

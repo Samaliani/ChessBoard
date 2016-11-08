@@ -5,7 +5,7 @@ import Chess.Piece;
 import Chess.Piece.Type;
 import Chess.Position;
 
-public class KingLogic extends CommonPieceLogic {
+public class KingLogic extends PieceLogic {
 
 	public KingLogic(Board board, Piece piece) {
 		super(board, piece);
