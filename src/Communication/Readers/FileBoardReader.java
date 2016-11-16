@@ -18,6 +18,7 @@ public class FileBoardReader extends BoardReader {
 	public FileBoardReader(String fileName) {
 		super("");
 		this.fileName = fileName;
+		fakeEvent = new Event(Event.Type.BoardChange, BoardData.initialData); 			
 	}
 
 	protected String readLine() {
@@ -52,7 +53,7 @@ public class FileBoardReader extends BoardReader {
 		if (line == null)
 			return null;
 
-		delay(1000);
+		delay(100);
 		int id = Integer.parseInt(line, 16);
 		Event.Type eventType = Event.Type.fromInt(id);
 		switch (eventType) {
@@ -76,8 +77,8 @@ public class FileBoardReader extends BoardReader {
 	@Override
 	public void sendEvent(OutEvent event) throws IOException {
 		// Start FEN can be loaded
-		if (event.getType() == OutEvent.Type.RequestBoard)
-			fakeEvent = new Event(Event.Type.BoardChange, BoardData.initialData); 			
+		//if (event.getType() == OutEvent.Type.RequestBoard)
+		//	fakeEvent = new Event(Event.Type.BoardChange, BoardData.initialData); 			
 	}
 
 	@Override

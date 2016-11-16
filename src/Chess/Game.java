@@ -152,6 +152,22 @@ public class Game {
 
 		return true;
 	}
+	
+	public boolean makeMovePassant(Position start, Position finish, Position taken)
+	{
+		Piece piece = board.getPiece(start);
+		if (piece.getColor() != getTurnColor())
+			return false;
+		
+		if (piece.getType() != Piece.Type.Pawn)
+			return false;
+		
+		PieceLogic logic = MainLogic.getPieceLogic(board, piece);
+		if (logic.getTakenPosition(taken) == null)
+			return false;
+		
+		return makeMove(start, finish);
+	}
 
 	public boolean makeCastling(Position start, Position finish) {
 

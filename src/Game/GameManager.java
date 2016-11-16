@@ -288,9 +288,10 @@ public class GameManager extends Component implements EventProvider, Communicati
 				success = makeMove(Utils.getPiecePosition(disappeared), inactivePos);
 			// An passant
 			else {
+				BoardData disInactive = BoardData.intersect(getInactiveData(), disappeared);
 				BoardData disActive = BoardData.intersect(getActiveData(), disappeared);
-				if ((disActive.getPieceCount() == 1) && (appeared.getPieceCount() == 1))
-					success = makeMove(Utils.getPiecePosition(disActive), Utils.getPiecePosition(appeared));
+				if ((disActive.getPieceCount() == 1) && (disInactive.getPieceCount() == 1) && (appeared.getPieceCount() == 1))
+					success = makePassant(Utils.getPiecePosition(disActive), Utils.getPiecePosition(appeared), Utils.getPiecePosition(disInactive));
 			}
 		}
 
@@ -410,6 +411,15 @@ public class GameManager extends Component implements EventProvider, Communicati
 
 		return game.makeMove(posStart, posFinish);
 	}
+	
+	private boolean makePassant(int start, int finish, int taken) {
+		Position posStart = new Position(start % 8, start / 8);
+		Position posFinish = new Position(finish % 8, finish / 8);
+		Position posTaken = new Position(taken % 8, taken / 8);
+
+		return game.makeMovePassant(posStart, posFinish, posTaken);
+	}
+	
 
 	private boolean makeCastling(int start, int finish) {
 		Position posStart = new Position(start % 8, start / 8);
