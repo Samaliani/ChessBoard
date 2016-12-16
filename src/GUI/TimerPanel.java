@@ -46,7 +46,7 @@ public class TimerPanel extends javax.swing.JPanel {
 	
 	private String getTimeText(Duration time) {
 		if (time.toHours() != 0)
-			return String.format("%d:%02d:%02d", time.toHours(), time.toMinutes(), time.getSeconds() % 60);
+			return String.format("%d:%02d:%02d", time.toHours(), time.toMinutes() % 60, time.getSeconds() % 60);
 		else if (time.getSeconds() > 10)
 			return String.format("%d:%02d", time.toMinutes(), time.getSeconds() % 60);
 		else

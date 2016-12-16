@@ -1,6 +1,7 @@
 package Engine;
 
-//import java.time.Instant;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.EventListener;
 import java.util.List;
 import java.util.Properties;
@@ -20,6 +21,7 @@ public class ChessEngineManager extends Component
 	boolean useEngine;
 	int timeout;
 	String engineCmd;
+	Instant startTime;
 
 	boolean running;
 
@@ -65,7 +67,7 @@ public class ChessEngineManager extends Component
 	public void loadSettings(Properties preferences) {
 
 		useEngine = Boolean.parseBoolean(preferences.getProperty("Engine.Use", "false"));
-		timeout = Integer.parseInt(preferences.getProperty("Engine.Time", "3000"));
+		timeout = Integer.parseInt(preferences.getProperty("Engine.Time", "30000"));
 		engineCmd = preferences.getProperty("Engine.Cmd", "");
 	}
 
@@ -118,6 +120,8 @@ public class ChessEngineManager extends Component
 
 		while (true) {
 
+			delay(10);
+			
 			synchronized (this) {
 				// Check running
 				if (!running)
@@ -149,13 +153,10 @@ public class ChessEngineManager extends Component
 						sendAnalysisInfoEvent(info);
 				}
 
-				// Duration period = Duration.between(startTime, Instant.now());
-				/*
-				 * if (period.toMillis() > timeout) { calculating = false;
-				 * String bestMove = engine.getBestMove();
-				 * System.out.println(bestMove); System.out.flush();
-				 * sendAnalysisReadyEvent(bestMove); }
-				 */
+				//Duration period = Duration.between(startTime, Instant.now());
+				//if (period.toMillis() > timeout) { 
+				//	stopCalculation();
+				// }
 			}
 
 			String movesToCalc = "";
@@ -172,7 +173,7 @@ public class ChessEngineManager extends Component
 					engine.cancelFind();
 
 				engine.findBestMove(position, movesToCalc);
-				//startTime = Instant.now();
+				startTime = Instant.now();
 				calculating = true;
 			}
 		}
@@ -239,4 +240,11 @@ public class ChessEngineManager extends Component
 		return useEngine;
 	}
 
+	private void delay(int millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 }

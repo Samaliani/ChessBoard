@@ -182,7 +182,7 @@ public class OpenningModel extends GameModel {
 			return;
 
 		String comments = getComment();
-		if (comments.length() > 0)
+		if (comments != null && !comments.isEmpty())
 			comments += System.lineSeparator();
 		
 		BoardData data = getNextMoves();
